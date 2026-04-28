@@ -386,7 +386,7 @@ This pattern ensures the table always reflects the current regulatory rates with
 
 <!-- ------------------------ -->
 ## Step 5: Core Data Engineering — Tables, Views and Staging
-Duration: 30
+Duration: 40
 
 In this step you will build the **STAGING layer**: cleansed, standardised and enriched data that the reporting layer will read from.
 
@@ -473,9 +473,87 @@ Risk-weighted assets and Loan-to-Value ratios are derived at query time from the
 
 For this pipeline: views feed the reporting layer at query time; staging tables are physical snapshots populated once per day by the task pipeline.
 
-### Part C: Zero-Copy Cloning
+### Part C: Warehouse Scaling — Elastic Compute in Action
 
-Run Part C to clone the transactions table:
+Views re-execute their query on every access. If that query is slow, you scale compute — not restructure your pipeline. Snowflake lets you resize a warehouse with a single `ALTER WAREHOUSE` command, and the change takes effect immediately.
+
+**When would a bank do this?** NorthBridge's staging refresh runs daily before the London markets open (06:00 UTC). If the data volume grows and the refresh risks missing the FCA's reporting window, the team would scale up the warehouse temporarily, run the refresh, then scale back down. You only pay for the time the larger warehouse is active.
+
+Run Part C of the script section by section.
+
+**Step 1 — Disable caching**
+
+To get an honest comparison, disable Snowflake's result cache so every run hits the warehouse:
+
+```sql
+ALTER SESSION SET USE_CACHED_RESULT = FALSE;
+```
+
+**Step 2 — Run the benchmark query on X-SMALL**
+
+This query joins 500k staged transactions to the accounts table and aggregates by category — representative of a real staging workload:
+
+```sql
+SELECT
+    a.account_type,
+    t.debit_credit,
+    t.merchant_category,
+    COUNT(*)                            AS txn_count,
+    ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
+    ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
+FROM STAGING.STG_TRANSACTIONS_V  t
+JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
+GROUP BY a.account_type, t.debit_credit, t.merchant_category
+ORDER BY total_amount_gbp DESC;
+```
+
+Note the execution time in the **Query History** panel or the results pane.
+
+**Step 3 — Scale up to MEDIUM**
+
+```sql
+ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'MEDIUM';
+```
+
+That's it — one command. The warehouse resizes immediately. To ensure the warehouse data cache is cleared (so we are comparing compute power, not cached micro-partitions), suspend and resume:
+
+```sql
+ALTER WAREHOUSE NORTHBRIDGE_WH SUSPEND;
+ALTER WAREHOUSE NORTHBRIDGE_WH RESUME;
+```
+
+**Step 4 — Re-run the same query on MEDIUM**
+
+Run the exact same query again. Compare the execution time with your X-SMALL baseline.
+
+> **Observe**: A MEDIUM warehouse has 4× the compute of X-SMALL. You should see a noticeable reduction in execution time — with zero changes to your SQL, schema or pipeline logic.
+
+**Step 5 — Scale back down**
+
+```sql
+ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'X-SMALL';
+ALTER SESSION SET USE_CACHED_RESULT = TRUE;
+```
+
+Scale down immediately after the heavy workload completes. In production, this pattern can be automated — the task DAG in Step 7 could scale up before the refresh and scale back down after.
+
+| Warehouse Size | Clusters | Credits/Hour | Use When |
+|---|---|---|---|
+| X-SMALL | 1 | 1 | Day-to-day development, light queries |
+| SMALL | 1 | 2 | Moderate workloads |
+| MEDIUM | 1 | 4 | Staging refresh, report generation |
+| LARGE | 1 | 8 | Heavy ETL, large data loads |
+
+> **Key Takeaway**: Snowflake separates storage from compute. Scaling compute up or down is instant and does not affect your data, your pipeline logic, or other users. This elasticity is why cloud data platforms are attractive to regulated firms — you right-size compute to your workload window, not to your peak.
+
+### Part D: Validate Your Views
+
+Run Part D of the script to confirm your views return clean, enriched data.
+
+### Part E: Zero-Copy Cloning
+
+Run Part E to clone the transactions table:
 
 ```sql
 CREATE TABLE IF NOT EXISTS RAW.TRANSACTIONS_DEV
@@ -498,10 +576,6 @@ Both tables show the same row count. The clone is a fully independent copy — m
 - Providing isolated environments for data analysis without impacting production
 
 > **Snowflake Capability**: Zero-copy cloning works on databases, schemas and tables. Combined with Time Travel (which retains historical versions of data for up to 90 days), this gives data engineers powerful tools for safe development and data recovery.
-
-### Validate Your Work
-
-Run the validation queries at the bottom of `04_staging_pipeline.sql` to confirm your views return clean, enriched data.
 
 <!-- ------------------------ -->
 ## Step 6: Building the Regulatory Reporting Layer
@@ -880,6 +954,7 @@ LCR_RUNOFF_RATES ─────────────────────
 - **Workspaces**: Organising worksheets into folders, running selections, keyboard shortcuts
 - **Databases, Schemas and Roles**: Three-layer architecture, RBAC context switching
 - **Tables and Views**: DDL conventions, cleansing views, when to materialise vs keep as a view
+- **Warehouse Scaling**: Instant resize with ALTER WAREHOUSE, elastic compute for workload windows
 - **File-based ingest**: Internal stages, file formats, COPY INTO — plus the Snowsight Load Data wizard
 - **Zero-Copy Cloning**: Instant environment creation for dev/UAT
 - **Stored Procedures**: Snowflake Scripting with variables, SQLROWCOUNT, exception handling, AUDIT_LOG

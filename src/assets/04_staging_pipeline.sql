@@ -240,7 +240,70 @@ FROM RAW.LOANS   l
 JOIN RAW.PRODUCTS p ON l.product_id = p.product_id;
 
 -- =============================================================================
--- PART C: VALIDATE THE VIEWS
+-- PART C: WAREHOUSE SCALING — ELASTIC COMPUTE IN ACTION
+--
+-- In a regulated bank, the staging refresh runs daily before market open.
+-- If the refresh window is too tight, you scale compute — not restructure
+-- your pipeline. Snowflake lets you resize a warehouse with a single command.
+--
+-- This section demonstrates:
+--   1. Running a query on X-SMALL (baseline)
+--   2. Scaling to MEDIUM with ALTER WAREHOUSE
+--   3. Re-running the same query (with caching disabled)
+--   4. Scaling back down — you only pay for what you use
+-- =============================================================================
+
+-- Disable result cache so every run hits the warehouse
+ALTER SESSION SET USE_CACHED_RESULT = FALSE;
+
+-- Confirm we are on X-SMALL
+SHOW WAREHOUSES LIKE 'NORTHBRIDGE_WH';
+
+-- C1: BASELINE — run on X-SMALL
+-- Note the execution time in the Query History or results pane
+SELECT
+    a.account_type,
+    t.debit_credit,
+    t.merchant_category,
+    COUNT(*)                            AS txn_count,
+    ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
+    ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
+FROM STAGING.STG_TRANSACTIONS_V  t
+JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
+GROUP BY a.account_type, t.debit_credit, t.merchant_category
+ORDER BY total_amount_gbp DESC;
+
+-- C2: SCALE UP — resize to MEDIUM (4× the compute of X-SMALL)
+ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'MEDIUM';
+
+-- Suspend and resume to clear the warehouse data cache
+ALTER WAREHOUSE NORTHBRIDGE_WH SUSPEND;
+ALTER WAREHOUSE NORTHBRIDGE_WH RESUME;
+
+-- C3: RE-RUN — same query on MEDIUM
+-- Compare the execution time with the X-SMALL baseline above
+SELECT
+    a.account_type,
+    t.debit_credit,
+    t.merchant_category,
+    COUNT(*)                            AS txn_count,
+    ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
+    ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
+FROM STAGING.STG_TRANSACTIONS_V  t
+JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
+GROUP BY a.account_type, t.debit_credit, t.merchant_category
+ORDER BY total_amount_gbp DESC;
+
+-- C4: SCALE BACK DOWN — return to X-SMALL to minimise credit usage
+ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'X-SMALL';
+
+-- Re-enable result cache for the rest of the lab
+ALTER SESSION SET USE_CACHED_RESULT = TRUE;
+
+-- =============================================================================
+-- PART D: VALIDATE THE VIEWS
 -- =============================================================================
 
 -- Check customer masking is working correctly
@@ -289,7 +352,7 @@ GROUP BY loan_type
 ORDER BY total_outstanding_gbp DESC;
 
 -- =============================================================================
--- PART D: ZERO-COPY CLONE
+-- PART E: ZERO-COPY CLONE
 -- Create a development copy of the transactions table instantly, with no
 -- additional storage cost (until data diverges). Ideal for testing pipeline
 -- changes without touching production data.
