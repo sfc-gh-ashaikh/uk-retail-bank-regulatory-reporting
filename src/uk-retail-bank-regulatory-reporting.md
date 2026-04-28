@@ -1,6 +1,6 @@
 author: NorthBridge Bank HOL Team
 id: uk-retail-bank-regulatory-reporting
-summary: Build a FCA/PRA regulatory reporting data pipeline on Snowflake for a UK retail bank. Covers Snowsight UI navigation, workspaces, databases/schemas/roles, file loading, staging, LCR/CAR/large exposures reporting, stored procedures, task orchestration, and Cortex Copilot.
+summary: Build a FCA/PRA regulatory reporting data pipeline on Snowflake for a UK retail bank. Covers Snowsight UI navigation, workspaces, databases/schemas/roles, file loading, staging, LCR/CAR/large exposures reporting, stored procedures, task orchestration, and Cortex Code.
 categories: snowflake-site:taxonomy/solution-center/data-engineering
 environments: web
 status: Published
@@ -32,7 +32,7 @@ By the end of this lab, you will have built the full pipeline — from raw data 
 - Core data engineering principles: tables, views, cloning and file-based ingest
 - How to create stored procedures using Snowflake Scripting
 - How to orchestrate a pipeline with Snowflake Tasks
-- How to use Cortex Copilot to accelerate SQL development
+- How to use Cortex Code to accelerate SQL development
 
 ### What You Will Need
 
@@ -168,7 +168,7 @@ For this lab, you will create one worksheet per step:
 | `05_REPORTING` | Step 6: Reporting Layer |
 | `06_PROCEDURES` | Step 7: Stored Procedures |
 | `07_TASKS` | Step 7: Task Orchestration |
-| `08_COPILOT` | Step 8: Cortex Copilot |
+| `08_CORTEX_CODE` | Step 8: Cortex Code |
 
 ### Running Code Efficiently
 
@@ -766,39 +766,39 @@ ALTER TASK STAGING.TASK_REFRESH_REPORTING SUSPEND;
 ```
 
 <!-- ------------------------ -->
-## Step 8: Accelerating Development with Cortex Copilot
+## Step 8: Accelerating Development with Cortex Code
 Duration: 15
 
-Cortex Copilot is Snowflake's AI assistant built directly into the Snowsight SQL editor. It helps you generate, explain, and optimise SQL — without ever leaving your worksheet.
+Cortex Code is Snowflake's AI assistant built directly into the Snowsight SQL editor. It helps you generate, explain, and optimise SQL — without ever leaving your worksheet.
 
-Open your `08_COPILOT` worksheet.
+Open your `08_CORTEX_CODE` worksheet.
 
-> **Data Residency**: Cortex Copilot runs entirely within your Snowflake account. Your SQL and schema metadata never leave your Snowflake environment.
+> **Data Residency**: Cortex Code runs entirely within your Snowflake account. Your SQL and schema metadata never leave your Snowflake environment.
 
-### Accessing Cortex Copilot
+### Accessing Cortex Code
 
-Click the **Cortex Copilot** icon (sparkle ✦) in the top-right corner of the worksheet editor. A chat panel opens alongside your worksheet.
+Click the **Cortex Code** icon (sparkle ✦) in the top-right corner of the worksheet editor. A chat panel opens alongside your worksheet.
 
-Alternatively, type a natural language comment directly in the worksheet — Copilot will suggest completions.
+Alternatively, type a natural language comment directly in the worksheet — Cortex Code will suggest completions.
 
 ### Exercise 1 — Generate a Query
 
-Type the following comment into your worksheet and invoke Copilot:
+Type the following comment into your worksheet and invoke Cortex Code:
 
 ```sql
 -- Show the top 10 customers by total loan exposure for the large exposures register,
 -- including their risk rating and whether they are in breach of the PRA 25% limit
 ```
 
-Copilot will suggest a SQL query. Review it, then run it. Compare the output with your `V_LARGE_EXPOSURES` view — do the results agree?
+Cortex Code will suggest a SQL query. Review it, then run it. Compare the output with your `V_LARGE_EXPOSURES` view — do the results agree?
 
-> **Best Practice**: Always validate AI-generated SQL against expected results. Copilot is a starting point, not a finished product.
+> **Best Practice**: Always validate AI-generated SQL against expected results. Cortex Code is a starting point, not a finished product.
 
 ### Exercise 2 — Explain Code
 
 Highlight the entire body of `SP_REFRESH_STAGING` (copy it into your worksheet first).
 
-In the Copilot chat panel, type:
+In the Cortex Code chat panel, type:
 ```
 Explain what this stored procedure does and what each section is responsible for
 ```
@@ -823,7 +823,7 @@ WHERE (SELECT SUM(outstanding_balance_gbp)
 ORDER BY total_loan_exposure_gbp DESC;
 ```
 
-Ask Copilot:
+Ask Cortex Code:
 ```
 Rewrite this query to eliminate the correlated subqueries using a JOIN and aggregation instead
 ```
@@ -832,7 +832,7 @@ Run both versions and compare execution plans. The rewritten version should scan
 
 ### Exercise 4 — Extend the Pipeline
 
-Type the following comment and let Copilot generate the SQL:
+Type the following comment and let Cortex Code generate the SQL:
 
 ```sql
 -- Write a query to identify which LCR run-off rate categories
@@ -840,16 +840,16 @@ Type the following comment and let Copilot generate the SQL:
 -- This would indicate a potential gap in our run-off rate reference data.
 ```
 
-This is a real data quality check a data engineer would want to build into the pipeline — Copilot can scaffold it in seconds.
+This is a real data quality check a data engineer would want to build into the pipeline — Cortex Code can scaffold it in seconds.
 
 ### When to Trust vs Validate
 
-| Copilot is reliable for | Validate carefully when |
+| Cortex Code is reliable for | Validate carefully when |
 |---|---|
 | Standard SQL patterns (GROUP BY, JOIN, aggregation) | Complex window function logic |
 | Explaining well-structured stored procedures | Regulatory calculations with specific formula requirements |
 | Scaffolding repetitive boilerplate | Any query that feeds a compliance submission |
-| Suggesting optimisation approaches | Schema-specific column names (Copilot may hallucinate) |
+| Suggesting optimisation approaches | Schema-specific column names (Cortex Code may hallucinate) |
 
 <!-- ------------------------ -->
 ## Conclusion and What You Learned
@@ -884,7 +884,7 @@ LCR_RUNOFF_RATES ─────────────────────
 - **Zero-Copy Cloning**: Instant environment creation for dev/UAT
 - **Stored Procedures**: Snowflake Scripting with variables, SQLROWCOUNT, exception handling, AUDIT_LOG
 - **Task Orchestration**: DAG creation, CRON scheduling, leaf-to-root resume order, Snowsight monitoring
-- **Cortex Copilot**: Generate, explain, refactor and extend SQL using AI assistance
+- **Cortex Code**: Generate, explain, refactor and extend SQL using AI assistance
 
 ### Clean Up (Optional)
 
@@ -902,6 +902,6 @@ DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
 - [Introduction to Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro)
 - [Understanding Stages](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui)
 - [Cloning Considerations](https://docs.snowflake.com/en/user-guide/object-clone)
-- [Cortex Copilot Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst)
+- [Cortex Code Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code)
 - [PRA Rulebook — Liquidity (LCR)](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity)
 - [Basel III LCR Framework](https://www.bis.org/publ/bcbs238.htm)

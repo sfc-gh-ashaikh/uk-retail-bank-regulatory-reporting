@@ -20,7 +20,7 @@ A three-layer data pipeline producing three regulatory reports:
 
 **Duration**: ~3 hours (half-day)  
 **Audience**: Data engineers, analytical application developers  
-**Snowflake Features**: Snowsight UI, worksheets, databases/schemas/roles, tables, views, internal stages, file formats, COPY INTO, zero-copy cloning, Snowflake Scripting stored procedures, tasks, Cortex Copilot
+**Snowflake Features**: Snowsight UI, worksheets, databases/schemas/roles, tables, views, internal stages, file formats, COPY INTO, zero-copy cloning, Snowflake Scripting stored procedures, tasks, Cortex Code
 
 | Step | Topic | Duration |
 |---|---|---|
