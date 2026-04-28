@@ -78,7 +78,7 @@ CREATE OR REPLACE TABLE STAGING.STG_TRANSACTIONS (
     transaction_date    DATE            NOT NULL,
     transaction_time    TIME            NOT NULL,
     transaction_type    VARCHAR(20)     NOT NULL,
-    debit_credit        VARCHAR(1)      NOT NULL,
+    debit_credit        VARCHAR(6)      NOT NULL,
     amount_gbp          NUMBER(12,2)    NOT NULL,
     description         VARCHAR(200),
     merchant_name       VARCHAR(100),

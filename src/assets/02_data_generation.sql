@@ -213,7 +213,7 @@ WITH gen AS (
     SELECT
         ROW_NUMBER() OVER (ORDER BY SEQ4())       AS rn,
         UNIFORM(1, 10000, RANDOM())               AS customer_id,
-        UNIFORM(1, 10,    RANDOM())               AS product_id_raw,
+        UNIFORM(1, 20,    RANDOM())               AS product_id_raw,
         ABS(RANDOM()) % 900000 + 100000           AS sort_suffix,
         LPAD((ABS(RANDOM()) % 90000000 + 10000000)::VARCHAR, 8, '0') AS account_number,
         DATEADD(DAY, -(UNIFORM(30, 3650, RANDOM())), CURRENT_DATE()) AS opened_date,
@@ -229,7 +229,7 @@ enriched AS (
         p.lcr_liability_cat AS lcr_liability_category,
         p.risk_weight_pct
     FROM gen g
-    JOIN RAW.PRODUCTS p ON p.product_id = ((g.product_id_raw % 10) + 1)
+    JOIN RAW.PRODUCTS p ON p.product_id = g.product_id_raw
     WHERE p.product_type IN ('CURRENT','SAVINGS','ISA','BOND')
 )
 SELECT
@@ -398,7 +398,7 @@ CREATE OR REPLACE TABLE RAW.TRANSACTIONS (
     transaction_date    DATE            NOT NULL,
     transaction_time    TIME            NOT NULL,
     transaction_type    VARCHAR(20)     NOT NULL,
-    debit_credit        VARCHAR(1)      NOT NULL,
+    debit_credit        VARCHAR(6)      NOT NULL,
     amount_gbp          NUMBER(12,2)    NOT NULL,
     description         VARCHAR(200),
     merchant_name       VARCHAR(100),

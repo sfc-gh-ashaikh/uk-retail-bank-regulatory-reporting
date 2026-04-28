@@ -164,11 +164,13 @@ BEGIN
     -- -----------------------------------------------------------------------
     -- Log completion
     -- -----------------------------------------------------------------------
+    LET v_duration VARCHAR := 'PROCEDURE_COMPLETE — duration: ' ||
+        DATEDIFF('second', :v_start_time, CURRENT_TIMESTAMP())::VARCHAR || 's';
+
     INSERT INTO STAGING.AUDIT_LOG (procedure_name, step_name, rows_processed, status)
     VALUES (
         :v_proc_name,
-        'PROCEDURE_COMPLETE — duration: ' ||
-            DATEDIFF('second', :v_start_time, CURRENT_TIMESTAMP())::VARCHAR || 's',
+        :v_duration,
         :v_total_rows,
         'SUCCESS'
     );
@@ -216,7 +218,7 @@ BEGIN
         gross_outflows_30d_gbp  NUMBER(20,2),
         gross_inflows_30d_gbp   NUMBER(20,2),
         net_outflows_30d_gbp    NUMBER(20,2),
-        lcr_ratio_pct           NUMBER(8,4),
+        lcr_ratio_pct           NUMBER(12,4),
         lcr_status              VARCHAR(20),
         regulatory_minimum_pct  NUMBER(5,2),
         regulatory_basis        VARCHAR(100),
@@ -353,11 +355,13 @@ BEGIN
     -- -----------------------------------------------------------------------
     -- Log completion
     -- -----------------------------------------------------------------------
+    LET v_duration VARCHAR := 'PROCEDURE_COMPLETE — duration: ' ||
+        DATEDIFF('second', :v_start_time, CURRENT_TIMESTAMP())::VARCHAR || 's';
+
     INSERT INTO STAGING.AUDIT_LOG (procedure_name, step_name, rows_processed, status)
     VALUES (
         :v_proc_name,
-        'PROCEDURE_COMPLETE — duration: ' ||
-            DATEDIFF('second', :v_start_time, CURRENT_TIMESTAMP())::VARCHAR || 's',
+        :v_duration,
         :v_total_rows,
         'SUCCESS'
     );
