@@ -14,16 +14,16 @@ NorthBridge Bank's legacy regulatory reporting system is being decommissioned. T
 
 | Topic | What You Will Learn |
 |---|---|
-| Snowsight UI | Navigate the interface, Query History, Task History, Data Explorer |
-| Workspaces | Organise worksheets and folders for structured pipeline development |
-| Databases, Schemas & Roles | Three-layer architecture (RAW, STAGING, REPORTING), RBAC, context switching |
-| File-Based Ingest | Internal stages, file formats, COPY INTO — loading PRA reference data |
-| Tables & Views | DDL conventions, cleansing views, PII masking, zero-copy cloning |
-| Warehouse Scaling | Instant resize to hit the 06:00 UTC reporting deadline |
-| Regulatory Reporting Layer | LCR, CAR and Large Exposures views using Basel III / PRA logic |
-| Stored Procedures | Snowflake Scripting with variables, exception handling, AUDIT_LOG |
-| Task Orchestration | DAG creation, CRON scheduling, leaf-to-root resume, monitoring |
-| Cortex Code | AI-assisted SQL generation, explanation and refactoring |
+| Snowsight UI | Navigate the interface, use Query History, Task History and Data Explorer |
+| Workspaces | Organise worksheets into folders, run selections, use keyboard shortcuts |
+| Databases, Schemas & Roles | Snowflake object hierarchy, three-layer architecture, RBAC and context switching |
+| File-Based Ingest | Internal stages, file formats, COPY INTO for loading external reference data |
+| Tables & Views | DDL conventions, cleansing views, PII masking techniques, zero-copy cloning |
+| Warehouse Scaling | Instantly resize compute with ALTER WAREHOUSE and understand credit implications |
+| Analytical Views | Build business-facing views using CTEs, aggregations and window functions |
+| Stored Procedures | Snowflake Scripting — variables, SQLROWCOUNT, exception handling, audit logging |
+| Task Orchestration | Create task DAGs, CRON scheduling, dependency ordering, pipeline monitoring |
+| Cortex Code | AI-assisted SQL generation, code explanation and query refactoring |
 
 ---
 
