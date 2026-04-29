@@ -1,6 +1,29 @@
 # NorthBridge Bank: Building a Regulatory Reporting Pipeline on Snowflake
 
-A hands-on lab for data engineers and analytical application developers at UK retail banks. Participants build a complete FCA/PRA regulatory reporting pipeline on Snowflake — from raw data ingest through to automated daily delivery.
+A hands-on lab for data engineers and analytical application developers at UK retail banks. You play a data engineer at NorthBridge Bank — a mid-size UK retail bank regulated by the FCA and PRA — tasked with replacing a legacy on-premises reporting system with a modern pipeline on Snowflake.
+
+---
+
+## The Story
+
+NorthBridge Bank's legacy regulatory reporting system is being decommissioned. The Risk & Compliance team needs three critical reports delivered daily before the London market opens: the Liquidity Coverage Ratio (LCR), Capital Adequacy Report (CAR), and Large Exposures Register. Your team has been given six weeks and a Snowflake account. This lab walks through everything you build — from standing up the environment to scheduling the daily pipeline.
+
+---
+
+## What Participants Will Learn
+
+| Topic | What You Will Learn |
+|---|---|
+| Snowsight UI | Navigate the interface, Query History, Task History, Data Explorer |
+| Workspaces | Organise worksheets and folders for structured pipeline development |
+| Databases, Schemas & Roles | Three-layer architecture (RAW, STAGING, REPORTING), RBAC, context switching |
+| File-Based Ingest | Internal stages, file formats, COPY INTO — loading PRA reference data |
+| Tables & Views | DDL conventions, cleansing views, PII masking, zero-copy cloning |
+| Warehouse Scaling | Instant resize to hit the 06:00 UTC reporting deadline |
+| Regulatory Reporting Layer | LCR, CAR and Large Exposures views using Basel III / PRA logic |
+| Stored Procedures | Snowflake Scripting with variables, exception handling, AUDIT_LOG |
+| Task Orchestration | DAG creation, CRON scheduling, leaf-to-root resume, monitoring |
+| Cortex Code | AI-assisted SQL generation, explanation and refactoring |
 
 ---
 
