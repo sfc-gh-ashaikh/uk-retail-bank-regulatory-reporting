@@ -43,28 +43,4 @@ Click the **Run** button (▶) or press **Cmd + Enter** (Mac) / **Ctrl + Enter**
 
 You should see your user, role and warehouse returned. If the warehouse shows `null`, select `NORTHBRIDGE_WH` from the warehouse dropdown in the top bar.
 
-## Key Areas to Explore Now
-
-### Query History
-
-Navigate to **Monitoring > Query History** — every SQL statement executed in your account, with status, duration and full SQL text. Invaluable for debugging and regulatory audit trails. Here you can:
-
-- Search and filter past queries by user, warehouse, status or time range
-- Click any query to see its full SQL, execution profile and statistics
-- Identify slow-running queries and review their query plans
-
-### Data Explorer
-
-Navigate to **Data** — expand databases to browse schemas, tables and views. Click any table to see column types, data preview and statistics.
-
-- **Database > Schema > Tables / Views / Stages / File Formats**
-- Click any table to see its columns, data types and preview data
-- Use the search bar to quickly find objects across all databases
-
-### Task History
-
-Navigate to **Monitoring > Task History** — where you will monitor your automated pipeline in Step 7.
-
-## Summary
-
-You now know how to navigate Snowsight, set your session context, run queries and explore objects. In the next step you will learn how to use Worksheets as a development workspace.
+You now know how to navigate Snowsight, set your session context and run a query. In the next step you will set up your worksheet workspace.

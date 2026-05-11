@@ -10,6 +10,8 @@ The PRA has published updated **LCR run-off rates** for the new regulatory year.
 
 Under Basel III, each liability category is multiplied by a prescribed **run-off rate** — the assumed withdrawal percentage under a 30-day stress scenario (e.g. Retail Stable deposits at 5%, Wholesale Financial Institutions at 100%). We store these in a reference table rather than hard-coding them — making updates easy when the PRA revises rates.
 
+[Download lcr_runoff_rates.csv](assets/lcr_runoff_rates.csv) to your local machine.
+
 ## Path A: Snowsight Load Data Wizard (UI)
 
 1. In the left nav, click **Data**
