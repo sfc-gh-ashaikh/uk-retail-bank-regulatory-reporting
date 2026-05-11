@@ -145,26 +145,4 @@ Cortex Code can help you:
 - Optimise query performance
 - Write stored procedures and DDL from descriptions
 
----
 
-## Conclusion and What You Learned
-
-Congratulations — you have built a complete FCA/PRA regulatory reporting pipeline on Snowflake for NorthBridge Bank.
-
-You built a complete three-layer regulatory reporting pipeline: RAW → STAGING (cleansing views) → REPORTING (LCR, CAR, Large Exposures), automated by a Task DAG running daily at 06:00 UTC with full audit logging.
-
-You learned: Snowsight UI navigation, worksheet workspaces, databases/schemas/roles with RBAC, tables vs views, warehouse scaling, file-based ingest (stages + COPY INTO), zero-copy cloning, Snowflake Scripting stored procedures, task orchestration, and Cortex Code for AI-assisted SQL development.
-
-### Clean Up (Optional)
-
-To remove all lab objects from your account:
-
-```sql
-USE ROLE SYSADMIN;
-DROP DATABASE IF EXISTS NORTHBRIDGE_BANK_HOL;
-DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
-```
-
-### Resources
-
-[Snowflake Scripting](https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index) · [Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro) · [Stages](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui) · [Cloning](https://docs.snowflake.com/en/user-guide/object-clone) · [Cortex Code](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code) · [PRA LCR Rulebook](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity) · [Basel III LCR (BIS)](https://www.bis.org/publ/bcbs238.htm)

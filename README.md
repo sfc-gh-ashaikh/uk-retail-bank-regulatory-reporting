@@ -1,14 +1,51 @@
-# Santander UK Snow Camp: Data Engineers & Analytical Applications
+# NorthBridge Bank: Building a Regulatory Reporting Pipeline on Snowflake
 
-A hands-on lab (~3 hours) for data engineers at UK retail banks. You play a data engineer at NorthBridge Bank — a mid-size UK retail bank regulated by the FCA and PRA — replacing a legacy reporting system with a modern pipeline on Snowflake that automates three critical regulatory reports: **LCR** (Basel III liquidity), **CAR** (Basel III capital adequacy) and **Large Exposures** (PRA 25% Tier 1 limit).
+Welcome to the **NorthBridge Bank Hands-On Lab**.
 
-**Prerequisites**: Snowflake account with `SYSADMIN` access, a web browser, basic SQL familiarity. No prior Snowflake experience required.
+You are a data engineer at **NorthBridge Bank**, a mid-size UK retail bank regulated by the Financial Conduct Authority (FCA) and the Prudential Regulation Authority (PRA). The bank's legacy on-premises regulatory reporting system is being decommissioned. Your team has been tasked with building a replacement pipeline on Snowflake to automate three critical regulatory reports:
+
+| Report | Regulation | Purpose |
+|---|---|---|
+| **Liquidity Coverage Ratio (LCR)** | Basel III / CRD IV | Ensures the bank holds sufficient liquid assets to survive a 30-day stress scenario |
+| **Capital Adequacy Report (CAR)** | Basel III Pillar 1 / CRR2 | Measures capital held against risk-weighted assets |
+| **Large Exposures Register** | PRA Rulebook | Identifies any single counterparty exposure exceeding 25% of Tier 1 capital |
+
+By the end of this lab, you will have built the full pipeline — from raw data ingest through to automated daily delivery — entirely on Snowflake.
+
+### What You Will Learn
+
+- How to navigate the Snowsight UI
+- How to use worksheets and folders as a development workspace
+- How to create and select databases, schemas and roles
+- Core data engineering principles: tables, views, cloning and file-based ingest
+- How to create stored procedures using Snowflake Scripting
+- How to orchestrate a pipeline with Snowflake Tasks
+- How to use Cortex Code to accelerate SQL development
+
+### What You Will Need
+
+- A Snowflake account with **SYSADMIN** role access
+- A web browser (Chrome or Firefox recommended)
+- Basic familiarity with SQL (SELECT, JOIN, GROUP BY)
+- No prior Snowflake experience required
+
+### What You Will Build
+
+A three-layer regulatory reporting data pipeline:
+
+```
+RAW (ingest) → STAGING (cleanse) → REPORTING (regulatory views)
+                    ↕
+         Automated by a Task DAG (daily at 06:00 UTC)
+```
+
+> **Note**: All data used in this lab is entirely synthetic. No real customer data is used at any point.
 
 ---
 
-## What You Will Learn and Build
+## Running the Lab
 
-A three-layer data pipeline (`RAW → STAGING → REPORTING`) automated by a Task DAG, covering: Snowsight UI navigation, worksheets and workspaces, databases/schemas/roles with RBAC, file-based ingest (stages, file formats, COPY INTO), tables vs views, PII masking, warehouse scaling, zero-copy cloning, Snowflake Scripting stored procedures, task orchestration (CRON + DAG), and Cortex Code for AI-assisted SQL development.
+Follow the step guides in `steps/` in order (01 → 09). Each file contains instructions and the full SQL — copy and paste directly into a Snowsight worksheet and run section by section.
 
 | Step | Topic | Duration |
 |---|---|---|
@@ -20,60 +57,7 @@ A three-layer data pipeline (`RAW → STAGING → REPORTING`) automated by a Tas
 | 6 | Building the Regulatory Reporting Layer | 25 min |
 | 7 | Stored Procedures and Task Orchestration | 30 min |
 | 8 | Accelerating Development with Cortex Code | 15 min |
-
----
-
-## Repository Structure
-
-```
-uk-retail-bank-regulatory-reporting/
-├── README.md
-├── LEGAL
-├── LICENSE
-├── uk-retail-bank-regulatory-reporting.md  ← Main guide (sfguides format)
-├── steps/                                  ← Per-step instructions with embedded SQL
-│   ├── step_01_snowsight_ui.md
-│   ├── step_02_workspaces.md
-│   ├── step_03_databases_schemas_roles.md
-│   ├── step_04_file_load.md
-│   ├── step_05_staging.md
-│   ├── step_06_reporting.md
-│   ├── step_07_procedures_tasks.md
-│   └── step_08_cortex_code.md
-└── scripts/
-    ├── setup.sql                           ← Database, schemas, warehouse
-    ├── teardown.sql                        ← Clean up all lab objects
-    ├── 02_data_generation.sql              ← Synthetic dataset (~530k rows)
-    ├── 03_file_load.sql                    ← Stage, file format, COPY INTO
-    ├── 04_staging_pipeline.sql             ← Staging tables and cleansing views
-    ├── 05_reporting_layer.sql              ← LCR, CAR, Large Exposures views
-    ├── 06_stored_procedures.sql            ← SP_REFRESH_STAGING, SP_REFRESH_REPORTING
-    ├── 07_tasks.sql                        ← Task DAG and scheduling
-    └── lcr_runoff_rates.csv                ← PRA reference data (25 rows)
-```
-
-All data is synthetic, generated within Snowflake using `GENERATOR()` and `RANDOM()`: Products (20), Customers (10K), Accounts (15K), Loans (3K), Transactions (500K). The CSV contains 25 rows of PRA/Basel III run-off rates for the LCR calculation.
-
----
-
-## Running the Lab
-
-Follow the step guides in `steps/` in order (01 → 08). Each file contains instructions and the full SQL — copy and paste directly into a Snowsight worksheet and run section by section.
-
----
-
-## Clean Up
-
-Run `scripts/teardown.sql` or:
-
-```sql
-USE ROLE SYSADMIN;
-ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_INGEST_COMPLETE   SUSPEND;
-ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_STAGING   SUSPEND;
-ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_REPORTING SUSPEND;
-DROP DATABASE  IF EXISTS NORTHBRIDGE_BANK_HOL;
-DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
-```
+| 9 | Clean Up | 5 min |
 
 ---
 
