@@ -213,7 +213,7 @@ WITH gen AS (
     SELECT
         ROW_NUMBER() OVER (ORDER BY SEQ4())       AS rn,
         UNIFORM(1, 10000, RANDOM())               AS customer_id,
-        UNIFORM(1, 20,    RANDOM())               AS product_id_raw,
+        UNIFORM(1, 10,    RANDOM())               AS product_id_raw,
         ABS(RANDOM()) % 900000 + 100000           AS sort_suffix,
         LPAD((ABS(RANDOM()) % 90000000 + 10000000)::VARCHAR, 8, '0') AS account_number,
         DATEADD(DAY, -(UNIFORM(30, 3650, RANDOM())), CURRENT_DATE()) AS opened_date,

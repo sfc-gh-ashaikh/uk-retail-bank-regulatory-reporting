@@ -502,7 +502,7 @@ SELECT
     ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
     ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
 FROM STAGING.STG_TRANSACTIONS_V  t
-JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+JOIN STAGING.STG_ACCOUNTS_V      a ON t.account_id = a.account_id
 WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
 GROUP BY a.account_type, t.debit_credit, t.merchant_category
 ORDER BY total_amount_gbp DESC;
@@ -618,7 +618,7 @@ SELECT ..., lcr_ratio_pct, lcr_status FROM lcr_calc;
 
 The key join to the reference data loaded in Step 4:
 ```sql
-LEFT JOIN RAW.LCR_RUNOFF_RATES r
+LEFT JOIN runoff_rates_dedup r
     ON a.lcr_liability_category = r.liability_category
 ```
 
@@ -641,10 +641,10 @@ FROM REPORTING.V_LCR_COMPONENTS;
 
 **Regulatory minimum**: Tier 1 ≥ 6.0%, Total Capital ≥ 8.0% (plus PRA buffers)
 
-The `V_CAPITAL_ADEQUACY` view aggregates risk-weighted assets from the loan book:
+The `V_CAPITAL_ADEQUACY` view aggregates risk-weighted assets from the staged loan book:
 
 ```sql
-ROUND(l.outstanding_balance_gbp * (l.risk_weight_pct / 100), 2) AS risk_weighted_assets_gbp
+ROUND(SUM(l.risk_weighted_asset_gbp), 2) AS risk_weighted_assets_gbp
 ```
 
 Risk weights are defined in the PRODUCTS table per Basel III standardised approach:

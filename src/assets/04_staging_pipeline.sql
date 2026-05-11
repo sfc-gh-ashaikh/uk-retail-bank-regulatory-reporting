@@ -269,7 +269,7 @@ SELECT
     ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
     ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
 FROM STAGING.STG_TRANSACTIONS_V  t
-JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+JOIN STAGING.STG_ACCOUNTS_V      a ON t.account_id = a.account_id
 WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
 GROUP BY a.account_type, t.debit_credit, t.merchant_category
 ORDER BY total_amount_gbp DESC;
@@ -291,7 +291,7 @@ SELECT
     ROUND(SUM(t.amount_gbp), 2)        AS total_amount_gbp,
     ROUND(AVG(t.amount_gbp), 2)        AS avg_amount_gbp
 FROM STAGING.STG_TRANSACTIONS_V  t
-JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+JOIN STAGING.STG_ACCOUNTS_V      a ON t.account_id = a.account_id
 WHERE t.transaction_date >= DATEADD('day', -30, CURRENT_DATE())
 GROUP BY a.account_type, t.debit_credit, t.merchant_category
 ORDER BY total_amount_gbp DESC;

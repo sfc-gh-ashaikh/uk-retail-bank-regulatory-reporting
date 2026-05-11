@@ -40,13 +40,11 @@ WITH
 hqla_stock AS (
     SELECT
         a.lcr_liability_category,
-        p.lcr_category,
+        a.lcr_category,
         SUM(a.balance_gbp)                                  AS balance_gbp
-    FROM RAW.ACCOUNTS  a
-    JOIN RAW.PRODUCTS  p ON a.product_id = p.product_id
-    WHERE a.status      = 'ACTIVE'
-      AND p.lcr_category IN ('HQLA_L1', 'HQLA_L2A')
-    GROUP BY a.lcr_liability_category, p.lcr_category
+    FROM STAGING.STG_ACCOUNTS_V  a
+    WHERE a.lcr_category IN ('HQLA_L1', 'HQLA_L2A')
+    GROUP BY a.lcr_liability_category, a.lcr_category
 ),
 
 hqla_summary AS (
@@ -56,20 +54,27 @@ hqla_summary AS (
     FROM hqla_stock
 ),
 
+runoff_rates_dedup AS (
+    SELECT
+        liability_category,
+        MAX(run_off_rate_pct) AS run_off_rate_pct
+    FROM RAW.LCR_RUNOFF_RATES
+    WHERE sub_category NOT IN ('FIXED_TERM_RESIDUAL_GT_30D')
+    GROUP BY liability_category
+),
+
 gross_outflows AS (
     SELECT
         a.lcr_liability_category,
         r.run_off_rate_pct,
         SUM(t.amount_gbp)                                   AS gross_outflow_gbp,
-        SUM(t.amount_gbp * (r.run_off_rate_pct / 100))     AS weighted_outflow_gbp
+        SUM(t.amount_gbp * (COALESCE(r.run_off_rate_pct, 10) / 100)) AS weighted_outflow_gbp
     FROM STAGING.STG_TRANSACTIONS_V  t
-    JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
-    LEFT JOIN RAW.LCR_RUNOFF_RATES   r
+    JOIN STAGING.STG_ACCOUNTS_V      a ON t.account_id = a.account_id
+    LEFT JOIN runoff_rates_dedup     r
         ON a.lcr_liability_category = r.liability_category
-        AND r.sub_category NOT IN ('FIXED_TERM_RESIDUAL_GT_30D')
     WHERE t.debit_credit       = 'DEBIT'
       AND t.transaction_date   >= DATEADD('day', -30, CURRENT_DATE())
-      AND a.status             = 'ACTIVE'
     GROUP BY a.lcr_liability_category, r.run_off_rate_pct
 ),
 
@@ -77,10 +82,9 @@ gross_inflows AS (
     SELECT
         SUM(t.amount_gbp)                                   AS gross_inflow_gbp
     FROM STAGING.STG_TRANSACTIONS_V  t
-    JOIN RAW.ACCOUNTS                a ON t.account_id = a.account_id
+    JOIN STAGING.STG_ACCOUNTS_V      a ON t.account_id = a.account_id
     WHERE t.debit_credit       = 'CREDIT'
       AND t.transaction_date   >= DATEADD('day', -30, CURRENT_DATE())
-      AND a.status             = 'ACTIVE'
 ),
 
 outflow_summary AS (
@@ -146,15 +150,14 @@ WITH
 rwa_by_type AS (
     SELECT
         l.loan_type,
-        p.product_name,
+        l.product_name,
         l.risk_weight_pct,
         COUNT(*)                                                    AS loan_count,
         ROUND(SUM(l.outstanding_balance_gbp), 2)                   AS total_outstanding_gbp,
-        ROUND(SUM(l.outstanding_balance_gbp * (l.risk_weight_pct / 100)), 2) AS risk_weighted_assets_gbp
-    FROM RAW.LOANS    l
-    JOIN RAW.PRODUCTS p ON l.product_id = p.product_id
+        ROUND(SUM(l.risk_weighted_asset_gbp), 2)                   AS risk_weighted_assets_gbp
+    FROM STAGING.STG_LOANS_V l
     WHERE l.status != 'DEFAULT'
-    GROUP BY l.loan_type, p.product_name, l.risk_weight_pct
+    GROUP BY l.loan_type, l.product_name, l.risk_weight_pct
 ),
 
 total_rwa AS (
@@ -163,10 +166,8 @@ total_rwa AS (
 
 tier1_capital AS (
     SELECT SUM(balance_gbp) AS tier1_capital_gbp
-    FROM RAW.ACCOUNTS a
-    JOIN RAW.PRODUCTS p ON a.product_id = p.product_id
-    WHERE p.product_type = 'BOND'
-      AND a.status       = 'ACTIVE'
+    FROM STAGING.STG_ACCOUNTS_V a
+    WHERE a.account_type = 'BOND'
 ),
 
 car_calc AS (
@@ -201,15 +202,14 @@ COMMENT = 'Capital Adequacy detail — RWA by loan type and risk weight'
 AS
 SELECT
     l.loan_type,
-    p.product_name,
+    l.product_name,
     l.risk_weight_pct,
     COUNT(*)                                                    AS loan_count,
     ROUND(SUM(l.outstanding_balance_gbp), 2)                   AS total_outstanding_gbp,
-    ROUND(SUM(l.outstanding_balance_gbp * (l.risk_weight_pct / 100)), 2) AS risk_weighted_assets_gbp,
+    ROUND(SUM(l.risk_weighted_asset_gbp), 2)                   AS risk_weighted_assets_gbp,
     l.status                                                    AS loan_status
-FROM RAW.LOANS    l
-JOIN RAW.PRODUCTS p ON l.product_id = p.product_id
-GROUP BY l.loan_type, p.product_name, l.risk_weight_pct, l.status
+FROM STAGING.STG_LOANS_V l
+GROUP BY l.loan_type, l.product_name, l.risk_weight_pct, l.status
 ORDER BY risk_weighted_assets_gbp DESC;
 
 -- =============================================================================
@@ -227,17 +227,15 @@ WITH
 
 tier1_capital AS (
     SELECT SUM(a.balance_gbp) AS tier1_capital_gbp
-    FROM RAW.ACCOUNTS a
-    JOIN RAW.PRODUCTS p ON a.product_id = p.product_id
-    WHERE p.product_type = 'BOND'
-      AND a.status       = 'ACTIVE'
+    FROM STAGING.STG_ACCOUNTS_V a
+    WHERE a.account_type = 'BOND'
 ),
 
 loan_exposure AS (
     SELECT
         customer_id,
         ROUND(SUM(outstanding_balance_gbp), 2) AS loan_exposure_gbp
-    FROM RAW.LOANS
+    FROM STAGING.STG_LOANS_V
     WHERE status != 'DEFAULT'
     GROUP BY customer_id
 ),
@@ -246,22 +244,21 @@ deposit_exposure AS (
     SELECT
         customer_id,
         ROUND(SUM(balance_gbp), 2) AS deposit_exposure_gbp
-    FROM RAW.ACCOUNTS
-    WHERE status = 'ACTIVE'
+    FROM STAGING.STG_ACCOUNTS_V
     GROUP BY customer_id
 ),
 
 total_exposure AS (
     SELECT
         c.customer_id,
-        c.first_name || ' ' || c.last_name     AS customer_name,
+        c.full_name                            AS customer_name,
         c.segment,
         c.risk_rating,
         COALESCE(l.loan_exposure_gbp, 0)       AS loan_exposure_gbp,
         COALESCE(d.deposit_exposure_gbp, 0)    AS deposit_exposure_gbp,
         COALESCE(l.loan_exposure_gbp, 0) +
             COALESCE(d.deposit_exposure_gbp, 0) AS total_exposure_gbp
-    FROM RAW.CUSTOMERS    c
+    FROM STAGING.STG_CUSTOMERS_V    c
     LEFT JOIN loan_exposure    l ON c.customer_id = l.customer_id
     LEFT JOIN deposit_exposure d ON c.customer_id = d.customer_id
     WHERE COALESCE(l.loan_exposure_gbp, 0) + COALESCE(d.deposit_exposure_gbp, 0) > 0
