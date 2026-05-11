@@ -1,4 +1,4 @@
-# Snowflake UK Snow Camp: Data Engineer & Analytical Applications
+# Santander UK Snow Camp: Data Engineer & Analytical Applications
 
 Welcome to the **NorthBridge Bank Hands-On Lab**.
 
