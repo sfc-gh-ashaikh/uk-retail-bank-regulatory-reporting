@@ -13,7 +13,9 @@ Snowsight is Snowflake's web-based interface for querying data, managing objects
 - **Activity** — view Query History, Copy History, Task History and more
 - **Admin** — manage warehouses, resource monitors, users and roles
 
-## Context Controls
+## Top Bar Context Controls
+
+Every worksheet shows your current **Role**, **Warehouse** and **Database/Schema**. Changing your role changes what objects are visible — this is Snowflake's role-based access control (RBAC) in action.
 
 In the top-right of any worksheet you will see two dropdowns:
 
@@ -24,7 +26,9 @@ Always confirm these are set correctly before running SQL.
 
 ## Your First Query
 
-Open a new worksheet and run the following to verify your session context:
+Click **Worksheets** in the left nav, then click **+** to open a new worksheet.
+
+Run the following to confirm your connection context:
 
 ```sql
 SELECT
@@ -35,27 +39,31 @@ SELECT
     CURRENT_TIMESTAMP() AS current_time;
 ```
 
-You should see your username, active role, warehouse, database and the current timestamp.
+Click the **Run** button (▶) or press **Cmd + Enter** (Mac) / **Ctrl + Enter** (Windows).
 
-## Query History
+You should see your user, role and warehouse returned. If the warehouse shows `null`, select `NORTHBRIDGE_WH` from the warehouse dropdown in the top bar.
 
-Navigate to **Activity > Query History** in the left nav. Here you can:
+## Key Areas to Explore Now
+
+### Query History
+
+Navigate to **Monitoring > Query History** — every SQL statement executed in your account, with status, duration and full SQL text. Invaluable for debugging and regulatory audit trails. Here you can:
 
 - Search and filter past queries by user, warehouse, status or time range
 - Click any query to see its full SQL, execution profile and statistics
 - Identify slow-running queries and review their query plans
 
-## Data Explorer
+### Data Explorer
 
-Navigate to **Data > Databases** to browse the object hierarchy:
+Navigate to **Data** — expand databases to browse schemas, tables and views. Click any table to see column types, data preview and statistics.
 
 - **Database > Schema > Tables / Views / Stages / File Formats**
 - Click any table to see its columns, data types and preview data
 - Use the search bar to quickly find objects across all databases
 
-## Task History
+### Task History
 
-Navigate to **Activity > Task History** to monitor scheduled task runs. You will use this in Step 7 when building the automated pipeline.
+Navigate to **Monitoring > Task History** — where you will monitor your automated pipeline in Step 7.
 
 ## Summary
 

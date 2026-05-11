@@ -7,7 +7,17 @@ This step automates the regulatory reporting pipeline using stored procedures an
 - **Part A:** Create two stored procedures that refresh the staging and reporting layers
 - **Part B:** Build a Task DAG (Directed Acyclic Graph) to orchestrate daily execution
 
+The reporting views built in Step 6 always reflect live data. For regulatory submissions, we also need **daily point-in-time snapshots** — a frozen copy of each report as at the submission date. This step automates that process.
+
 ## Part A: Stored Procedures
+
+Open your `06_PROCEDURES` worksheet and work through `scripts/06_stored_procedures.sql`.
+
+**SP_REFRESH_STAGING** truncates and reloads all staging tables from RAW using **Snowflake Scripting** — a SQL-native procedural language with variables, control flow and exception handling.
+
+Key features: `DECLARE` (variables with defaults), `SQLROWCOUNT` (rows affected by the last DML statement), `BEGIN ... EXCEPTION WHEN OTHER THEN ... END` (per-table error handling without aborting the entire procedure), and `SQLERRM` (error message text).
+
+**SP_REFRESH_REPORTING** creates daily snapshot tables (`SNAP_LCR_COMPONENTS`, `SNAP_CAPITAL_ADEQUACY`, `SNAP_LARGE_EXPOSURES`) with a `snapshot_date` column — preserving a full audit trail of regulatory positions.
 
 Stored procedures encapsulate multi-step logic with error handling and audit logging. Snowflake Scripting uses SQL-native syntax: `DECLARE ... BEGIN ... EXCEPTION ... END`.
 
@@ -416,12 +426,48 @@ SELECT 'SNAP_LARGE_EXPOSURES'  AS snapshot, COUNT(*) AS "rows" FROM REPORTING.SN
 
 ## Part B: Task Orchestration
 
+Open your `07_TASKS` worksheet and work through `scripts/07_tasks.sql`.
+
+A **task** executes SQL on a schedule or when a predecessor completes. Tasks linked by dependencies form a **DAG** (Directed Acyclic Graph). NorthBridge Bank's pipeline DAG:
+
 Tasks automate execution on a schedule or in response to predecessor task completion. The DAG below runs daily at 06:00 UTC:
 
 ```
 TASK_INGEST_COMPLETE (root — scheduled daily at 06:00 UTC)
     └── TASK_REFRESH_STAGING (calls SP_REFRESH_STAGING)
              └── TASK_REFRESH_REPORTING (calls SP_REFRESH_REPORTING)
+```
+
+The root task runs on a **CRON schedule** — at 06:00 UTC every day, before the London markets open and before the FCA's daily reporting window:
+```sql
+SCHEDULE = 'USING CRON 0 6 * * * UTC'
+```
+
+Child tasks use `AFTER` to declare their dependency:
+```sql
+CREATE OR REPLACE TASK STAGING.TASK_REFRESH_STAGING
+    WAREHOUSE = NORTHBRIDGE_WH
+    AFTER     STAGING.TASK_INGEST_COMPLETE
+AS
+CALL STAGING.SP_REFRESH_STAGING();
+```
+
+**Resume tasks leaf-to-root** (tasks are created `SUSPENDED`):
+
+> **Why leaf first?** If you resume the root task before the children are active, the root task will complete and try to trigger suspended children — which won't run. Always work bottom-up.
+
+**Manually trigger** rather than waiting for 06:00 UTC:
+```sql
+EXECUTE TASK STAGING.TASK_INGEST_COMPLETE;
+```
+
+**Monitor:** Navigate to **Monitoring > Task History** to see each task's status, duration, DAG graph and error messages. Give it 30–60 seconds, then refresh.
+
+**Suspend tasks** when finished to avoid unnecessary compute:
+```sql
+ALTER TASK STAGING.TASK_INGEST_COMPLETE   SUSPEND;
+ALTER TASK STAGING.TASK_REFRESH_STAGING   SUSPEND;
+ALTER TASK STAGING.TASK_REFRESH_REPORTING SUSPEND;
 ```
 
 ```sql

@@ -4,17 +4,27 @@
 
 This step loads the PRA LCR run-off rate reference file (`lcr_runoff_rates.csv`) into the RAW schema. You can use either the Snowsight UI wizard or the SQL path below.
 
+Not all data can be generated in SQL. Reference data — like regulatory rate tables published by the PRA — arrives as files. This step shows two ways to load a CSV file into Snowflake.
+
+The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received `lcr_runoff_rates.csv` and needs to load it into Snowflake. Download `scripts/lcr_runoff_rates.csv` from this repository to your local machine.
+
+Under Basel III, each liability category is multiplied by a prescribed **run-off rate** — the assumed withdrawal percentage under a 30-day stress scenario (e.g. Retail Stable deposits at 5%, Wholesale Financial Institutions at 100%). We store these in a reference table rather than hard-coding them — making updates easy when the PRA revises rates.
+
 ## Path A: Snowsight Load Data Wizard (UI)
 
-1. Navigate to **Data > Databases > NORTHBRIDGE_BANK_HOL > RAW**
-2. Run the table creation SQL from Path B (Step 4A) first
-3. Click on **Stages > NORTHBRIDGE_REF_STAGE** (create it via Step 4B SQL first)
-4. Click the **+ Files** button in the top right
-5. Select `lcr_runoff_rates.csv` from your `assets/` folder
-6. Click **Upload**
-7. Then run the COPY INTO statement from Path B (Step 4E) to load the data
+1. In the left nav, click **Data**
+2. Navigate to **NORTHBRIDGE_BANK_HOL > RAW**
+3. Click **+ Create** (top right) > **Table from file**
+4. Upload `lcr_runoff_rates.csv`
+5. Set the table name to `LCR_RUNOFF_RATES`
+6. Review column mapping — Snowsight auto-detects types
+7. Click **Load**
 
-## Path B: SQL Path
+Alternatively, run the table creation SQL from Path B (Step 4A) first, then click on **Stages > NORTHBRIDGE_REF_STAGE** (create it via Step 4B SQL first), click the **+ Files** button in the top right, select `lcr_runoff_rates.csv` from your `assets/` folder, click **Upload**, and then run the COPY INTO statement from Path B (Step 4E) to load the data.
+
+## Path B: SQL Path (Stages + COPY INTO)
+
+Open your `03_FILE_LOAD` worksheet and run `scripts/03_file_load.sql` section by section.
 
 This approach shows the underlying mechanics — stages, file formats and COPY INTO:
 
@@ -155,7 +165,14 @@ FROM TABLE(INFORMATION_SCHEMA.COPY_HISTORY(
 
 ## Key Concepts
 
-- **Stage** — a landing zone for files before they are loaded into tables
-- **File Format** — defines how Snowflake should parse the file (delimiter, header, null handling)
+- **Stage** — a landing zone inside your Snowflake account where files are held before loading
+- **File Format** — tells Snowflake how to parse the file (delimiter, header row, null handling)
 - **COPY INTO** — the bulk loading command that reads from a stage into a table
 - **ON_ERROR** — controls whether to abort or skip on row-level parsing errors
+
+> **Note**: To upload the file to the stage via SQL (SnowSQL CLI): `PUT file:///path/to/lcr_runoff_rates.csv @RAW.NORTHBRIDGE_REF_STAGE;`
+> For this lab, use the Snowsight stage UI to upload the file (click the stage object in Data browser > Upload button).
+
+## Verify and Reload
+
+You should see **25 rows**. When the PRA publishes revised rates, simply `TRUNCATE TABLE RAW.LCR_RUNOFF_RATES`, re-upload the new CSV to the stage, and re-run `COPY INTO`.

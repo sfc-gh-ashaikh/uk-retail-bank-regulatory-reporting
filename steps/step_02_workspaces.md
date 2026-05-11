@@ -6,15 +6,26 @@ Snowsight Worksheets are your primary workspace for writing, running and organis
 
 ## Creating a New Worksheet
 
+Click **Worksheets** in the left nav, click **+** (top right), and rename it to `NORTHBRIDGE_HOL_SETUP`. Good names describe what the code does — not who wrote it or when.
+
 1. Click the **+** button at the top of the left navigation panel
 2. Select **SQL Worksheet**
 3. A new untitled worksheet opens — give it a meaningful name by clicking the title
 
 ## Organising with Folders
 
-- Click the **...** menu next to Worksheets and select **New Folder**
-- Drag worksheets into folders to group by project (e.g. "NorthBridge HOL")
-- Folders help keep your workspace tidy as your project grows
+Click the **+** folder icon, create a folder called **NorthBridge HOL**, and drag your worksheet into it. For this lab, create one worksheet per step:
+
+| Worksheet Name | Step |
+|---|---|
+| `01_SETUP` | Step 3: Environment Setup |
+| `02_DATA_GENERATION` | Step 3: Data Loading |
+| `03_FILE_LOAD` | Step 4: CSV Reference Data |
+| `04_STAGING` | Step 5: Staging Layer |
+| `05_REPORTING` | Step 6: Reporting Layer |
+| `06_PROCEDURES` | Step 7: Stored Procedures |
+| `07_TASKS` | Step 7: Task Orchestration |
+| `08_CORTEX_CODE` | Step 8: Cortex Code |
 
 ## Context Bar
 
@@ -32,20 +43,22 @@ Setting the correct context avoids fully qualifying every table name in your SQL
 - **Run selection** — highlight specific SQL statements and run only those
 - **Run single statement** — place your cursor within a statement and use the shortcut to run just that one
 
-## Keyboard Shortcuts
+## Keyboard Shortcuts and Tips
 
-| Action | Mac | Windows/Linux |
+| Action | Mac | Windows |
 |---|---|---|
-| Run all / selection | Cmd + Enter | Ctrl + Enter |
-| Run single statement | Cmd + Shift + Enter | Ctrl + Shift + Enter |
-| Format SQL | Cmd + Shift + F | Ctrl + Shift + F |
-| Comment / Uncomment | Cmd + / | Ctrl + / |
-| Find & Replace | Cmd + H | Ctrl + H |
-| Toggle sidebar | Cmd + B | Ctrl + B |
+| Run selected statement | `Cmd + Enter` | `Ctrl + Enter` |
+| Run all statements | `Cmd + Shift + Enter` | `Ctrl + Shift + Enter` |
+| Comment/uncomment selection | `Cmd + /` | `Ctrl + /` |
+| Format SQL | `Cmd + Shift + F` | `Ctrl + Shift + F` |
+| Find & Replace | `Cmd + H` | `Ctrl + H` |
+| Toggle sidebar | `Cmd + B` | `Ctrl + B` |
+
+> **Tip**: Highlight a single statement and press `Cmd/Ctrl + Enter` to run only that statement. This prevents accidentally running an entire file.
 
 ## Results Panel
 
-After running a query, the results panel shows:
+After running a query, the results panel at the bottom lets you download results as CSV, switch to Chart view, or copy cells/rows.
 
 - **Results tab** — the query output as a table with sorting, filtering and download options
 - **Chart tab** — click to visualise query results as bar, line, scatter or heatmap charts
@@ -57,4 +70,4 @@ You can place multiple SQL statements in a single worksheet separated by semicol
 
 ## Summary
 
-You now know how to create worksheets, organise them in folders, set context, run queries and inspect results. In the next step you will create the database, schemas and tables for the NorthBridge Bank pipeline.
+You now know how to create worksheets, organise them in folders, set context, run queries and inspect results. Create the remaining worksheets for the lab before proceeding to Step 3.

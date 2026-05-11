@@ -4,15 +4,37 @@
 
 This step creates three FCA/PRA regulatory reporting views in the REPORTING schema. These views read from the STAGING layer and produce compliance metrics that a UK retail bank must report to regulators.
 
+Open your `05_REPORTING` worksheet and work through `scripts/05_reporting_layer.sql`.
+
 ## Report 1: Liquidity Coverage Ratio (LCR)
 
 The LCR ensures a bank holds enough high-quality liquid assets (HQLA) to survive a 30-day stress scenario.
 
 **Formula:** `LCR = Total HQLA / Net Cash Outflows (30-day stress) x 100`
 
+**Regulatory minimum**: 100% (PRA post-Brexit maintained from CRD IV)
+
 - **Numerator:** Sum of HQLA Level 1 + Level 2A account balances
 - **Denominator:** Gross outflows (weighted by run-off rates) minus inflows (capped at 75% of outflows)
-- **Regulatory minimum:** 100% (PRA requirement)
+
+The `V_LCR_COMPONENTS` view uses a multi-CTE structure to calculate LCR in stages. The key join to the reference data loaded in Step 4:
+```sql
+LEFT JOIN runoff_rates_dedup r
+    ON a.lcr_liability_category = r.liability_category
+```
+
+This is why storing run-off rates as a table matters — if the PRA updates the rates, you reload the CSV and every LCR calculation immediately reflects the new rates, without changing a single line of SQL.
+
+Run the LCR view and check the output:
+```sql
+SELECT
+    reporting_date,
+    ROUND(total_hqla_gbp / 1000000, 2)       AS hqla_millions_gbp,
+    ROUND(net_outflows_30d_gbp / 1000000, 2) AS net_outflows_millions_gbp,
+    lcr_ratio_pct,
+    lcr_status
+FROM REPORTING.V_LCR_COMPONENTS;
+```
 
 ## Report 2: Capital Adequacy Ratio (CAR)
 
@@ -20,9 +42,25 @@ The CAR measures whether a bank has enough capital to absorb losses from its loa
 
 **Formula:** `Tier 1 Capital Ratio = Tier 1 Capital / Risk-Weighted Assets x 100`
 
+**Regulatory minimum**: Tier 1 >= 6.0%, Total Capital >= 8.0% (plus PRA buffers)
+
 - **RWA:** Each loan's outstanding balance multiplied by its Basel III risk weight
 - **Tier 1 Capital proxy:** Aggregate BOND account balances
 - **Regulatory minimums:** CET1 >= 4.5%, Tier 1 >= 6.0%, Total Capital >= 8.0%
+
+The `V_CAPITAL_ADEQUACY` view aggregates risk-weighted assets from the staged loan book. Risk weights are defined in the PRODUCTS table per Basel III standardised approach:
+- Residential mortgages: **35%**
+- Buy-to-let mortgages: **50%**
+- Personal / auto loans: **75%**
+
+Run and check:
+```sql
+SELECT
+    tier1_ratio_pct,
+    tier1_status,
+    ROUND(total_rwa_gbp / 1000000, 2) AS rwa_millions_gbp
+FROM REPORTING.V_CAPITAL_ADEQUACY;
+```
 
 ## Report 3: Large Exposures Register
 
@@ -30,7 +68,35 @@ The PRA mandates that no single counterparty exposure may exceed 25% of Tier 1 c
 
 **Rule:** `Exposure per customer = Loan balances + Deposit balances`
 
+PRA Rulebook — Large Exposures 4.1. No single exposure may exceed **25% of Tier 1 capital**.
+
+The `V_LARGE_EXPOSURES` view aggregates per-customer exposure across all products:
+```sql
+COALESCE(l.loan_exposure_gbp, 0) +
+    COALESCE(d.deposit_exposure_gbp, 0) AS total_exposure_gbp
+```
+
+And flags breaches:
+```sql
+CASE
+    WHEN (total_exposure_gbp / tier1_capital_gbp) > 0.25 THEN 'BREACH'
+    WHEN (total_exposure_gbp / tier1_capital_gbp) > 0.20 THEN 'WARNING'
+    ELSE 'OK'
+END  AS large_exposure_flag
+```
+
+The 20% threshold creates a warning buffer — giving the risk team visibility of customers approaching the regulatory limit before a breach occurs.
+
 Customers exceeding 25% are flagged as BREACH; those above 20% are flagged as WARNING.
+
+Run and check for any breaches:
+```sql
+SELECT large_exposure_flag, COUNT(*) AS customer_count
+FROM REPORTING.V_LARGE_EXPOSURES
+GROUP BY large_exposure_flag;
+```
+
+> With synthetic random data, you may see a small number of breaches — this is expected and realistic. In a real bank, breaches would trigger an immediate escalation to the risk team.
 
 ## Run the Full Script
 

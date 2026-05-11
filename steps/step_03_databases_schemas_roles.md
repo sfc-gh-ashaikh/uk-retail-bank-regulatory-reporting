@@ -7,7 +7,19 @@ This step creates the NorthBridge Bank lab environment and generates synthetic U
 1. **Environment setup** — creates the database, schemas, warehouse and audit log
 2. **Data generation** — populates the RAW schema with realistic banking data
 
+Every object in Snowflake exists within a hierarchy: **Organisation > Account > Database > Schema > Tables/Views/Procedures**. When you write SQL without fully qualifying names, Snowflake uses your current database and schema context.
+
 ## Concepts
+
+NorthBridge Bank uses a **three-layer architecture** — a standard pattern in regulated data environments:
+
+| Schema | Purpose | Who Writes | Who Reads |
+|---|---|---|---|
+| **RAW** | Immutable ingest zone. Data lands here exactly as received from source systems. Never modified after load. | Ingest pipelines | Data engineers |
+| **STAGING** | Cleansed, standardised, enriched data. PII is masked, data types are enforced. | Data engineers | Analytics engineers |
+| **REPORTING** | Business-facing regulatory views and daily snapshots. | Analytics engineers | Risk & Compliance, regulators |
+
+This separation means a bug in the reporting layer can never corrupt the raw source data.
 
 - **Database** — the top-level container for all objects
 - **Schema** — a logical grouping within a database (we use RAW, STAGING, REPORTING)
@@ -15,6 +27,8 @@ This step creates the NorthBridge Bank lab environment and generates synthetic U
 - **Warehouse** — the compute cluster that executes your queries
 
 ## Part A: Environment Setup
+
+Open your `01_SETUP` worksheet and run `scripts/setup.sql`. This creates the `NORTHBRIDGE_BANK_HOL` database, three schemas (`RAW`, `STAGING`, `REPORTING`), the `NORTHBRIDGE_WH` warehouse (X-Small, auto-suspend 60s), and the `STAGING.AUDIT_LOG` table.
 
 Open a new worksheet, paste the following SQL and run it:
 
@@ -93,9 +107,17 @@ SELECT
 
 You should see three schemas listed (RAW, STAGING, REPORTING) plus the default PUBLIC and INFORMATION_SCHEMA schemas.
 
+Verify in the left **Data** panel that the database and schemas are visible.
+
+**Try RBAC:** Toggle between `SYSADMIN` and `PUBLIC` in the role selector. As `PUBLIC`, the database browser may show fewer objects — this is role-based access control in action. Switch back to `SYSADMIN` before continuing.
+
 ## Part B: Synthetic Data Generation
 
+Open your `02_DATA_GENERATION` worksheet and run `scripts/02_data_generation.sql`.
+
 Now paste and run the data generation script. This creates five tables in the RAW schema with realistic UK retail banking data:
+
+> **Note**: The transactions table generates ~500,000 rows. This step takes approximately 60 seconds.
 
 ```sql
 -- =============================================================================
@@ -643,12 +665,14 @@ ORDER BY table_name;
 
 After running the data generation script, the final query should return:
 
-| TABLE_NAME   | ROW_COUNT |
+| Table | Expected Rows |
 |---|---|
-| ACCOUNTS     | ~15,000   |
-| CUSTOMERS    | 10,000    |
-| LOANS        | 3,000     |
-| PRODUCTS     | 20        |
-| TRANSACTIONS | 500,000   |
+| PRODUCTS | 20 |
+| CUSTOMERS | 10,000 |
+| ACCOUNTS | ~15,000 |
+| LOANS | 3,000 |
+| TRANSACTIONS | 500,000 |
 
 Navigate to **Data > Databases > NORTHBRIDGE_BANK_HOL** in the left nav to explore the tables you just created.
+
+**Explore the data:** Click **Data > NORTHBRIDGE_BANK_HOL > RAW > CUSTOMERS** and use the **Data Preview** tab. Notice the UK-specific fields: `NI_NUMBER` (National Insurance format), `POSTCODE` (UK format), `SORT_CODE` (bank sort code) and all amounts in GBP.

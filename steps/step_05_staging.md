@@ -11,6 +11,59 @@ This step builds the STAGING layer between RAW and REPORTING. You will create:
 
 The staging layer is responsible for data type enforcement, PII masking, standardisation, filtering invalid records and enrichment.
 
+Open your `04_STAGING` worksheet and work through `scripts/04_staging_pipeline.sql`.
+
+## Parts A & B: Staging Tables and Cleansing Views
+
+**Run Part A** to create four staging tables. Note the DDL conventions: explicit data types (`NUMBER`, `VARCHAR(n)`), `NOT NULL` constraints, `DEFAULT CURRENT_TIMESTAMP()` for load auditing, and `TIMESTAMP_NTZ` (timezone-naive — used in banking to avoid DST ambiguity).
+
+**Run Part B** to create cleansing views. Views store a query definition, not data — every access reads the latest from the underlying tables.
+
+**STG_CUSTOMERS_V** — applies two key transformations:
+
+*NI Number masking:*
+```sql
+SUBSTRING(ni_number, 1, 2) || ' ** ** ** ' ||
+    SUBSTRING(ni_number, LENGTH(ni_number), 1)  AS ni_number_masked
+```
+This exposes only the prefix and suffix — sufficient for reconciliation, not sufficient for identity theft.
+
+*Postcode standardisation:*
+```sql
+UPPER(TRIM(postcode))  AS postcode_formatted
+```
+Ensures all postcodes are uppercase with no leading/trailing spaces — critical for address matching and geographic analysis.
+
+**STG_ACCOUNTS_V** — enriches accounts with product details:
+```sql
+FROM RAW.ACCOUNTS  a
+JOIN RAW.PRODUCTS  p ON a.product_id = p.product_id
+WHERE a.status IN ('ACTIVE', 'DORMANT')
+```
+The JOIN to PRODUCTS adds `product_name`, `lcr_category` and `risk_weight_pct` — data needed by the LCR and CAR calculations.
+
+**STG_TRANSACTIONS_V** — filters to only cleared transactions:
+```sql
+WHERE status = 'CLEARED'
+  AND amount_gbp > 0
+  AND amount_gbp < 10000000
+```
+Rejected and pending transactions are excluded from regulatory calculations. The amount bounds catch data quality issues (negative amounts, implausibly large values).
+
+**STG_LOANS_V** — derives key risk metrics:
+```sql
+ROUND(l.outstanding_balance_gbp * (l.risk_weight_pct / 100), 2) AS risk_weighted_asset_gbp,
+
+CASE
+    WHEN l.collateral_value_gbp > 0
+    THEN ROUND((l.outstanding_balance_gbp / l.collateral_value_gbp) * 100, 2)
+    ELSE NULL
+END  AS ltv_ratio_pct
+```
+Risk-weighted assets and Loan-to-Value ratios are derived at query time from the source data — no duplication of values.
+
+For this pipeline: views feed the reporting layer at query time; staging tables are physical snapshots populated daily by the task pipeline.
+
 ## Run the Full Script
 
 Paste and run the following in a new worksheet:
@@ -257,19 +310,17 @@ SELECT
 FROM RAW.LOANS   l
 JOIN RAW.PRODUCTS p ON l.product_id = p.product_id;
 
--- =============================================================================
--- PART C: WAREHOUSE SCALING — ELASTIC COMPUTE IN ACTION
---
--- In a regulated bank, the staging refresh runs daily before market open.
--- If the refresh window is too tight, you scale compute — not restructure
--- your pipeline. Snowflake lets you resize a warehouse with a single command.
---
--- This section demonstrates:
---   1. Running a query on X-SMALL (baseline)
---   2. Scaling to MEDIUM with ALTER WAREHOUSE
---   3. Re-running the same query (with caching disabled)
---   4. Scaling back down — you only pay for what you use
--- =============================================================================
+## Part C: Warehouse Scaling
+
+If a view query is slow, you scale compute — not restructure your pipeline. Snowflake lets you resize a warehouse instantly with `ALTER WAREHOUSE`.
+
+Run Part C section by section: first disable caching (`ALTER SESSION SET USE_CACHED_RESULT = FALSE`), then run the benchmark query on X-SMALL. Note the execution time in the **Query History** panel or the results pane.
+
+Then scale up to MEDIUM (`ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'MEDIUM'`), suspend/resume to clear cache, and re-run the same query. Compare execution times — MEDIUM has 4× the compute, with zero changes to your SQL.
+
+Scale back down afterwards (`SET WAREHOUSE_SIZE = 'X-SMALL'` and re-enable caching). In production, the task DAG could automate this scale-up/scale-down pattern.
+
+> **Key Takeaway**: Snowflake separates storage from compute. Scaling is instant and does not affect your data or other users.
 
 -- Disable result cache so every run hits the warehouse
 ALTER SESSION SET USE_CACHED_RESULT = FALSE;
@@ -387,6 +438,25 @@ SELECT
 -- Key point: modifying TRANSACTIONS_DEV does NOT affect TRANSACTIONS
 -- DELETE FROM RAW.TRANSACTIONS_DEV WHERE status = 'REJECTED';  -- safe to run on dev clone
 ```
+
+## Parts D & E: Validate Views and Zero-Copy Cloning
+
+**Run Part D** to confirm your views return clean, enriched data.
+
+**Run Part E** to clone the transactions table:
+
+```sql
+CREATE TABLE IF NOT EXISTS RAW.TRANSACTIONS_DEV
+    CLONE RAW.TRANSACTIONS;
+```
+
+This completes **instantly** — regardless of the table size — and uses **no additional storage** until data in the clone diverges from the original. Both tables show the same row count. The clone is a fully independent copy — modifications to `TRANSACTIONS_DEV` do not affect `TRANSACTIONS`. This is the recommended pattern for:
+
+- Testing pipeline changes safely
+- Creating development/UAT environments instantly
+- Providing isolated environments for data analysis without impacting production
+
+> **Snowflake Capability**: Zero-copy cloning works on databases, schemas and tables. Combined with Time Travel (which retains historical versions of data for up to 90 days), this gives data engineers powerful tools for safe development and data recovery.
 
 ## Key Concepts
 
