@@ -1,4 +1,4 @@
-# NorthBridge Bank: Building a Regulatory Reporting Pipeline on Snowflake
+# Santander UK Snow Camp: Data Engineers & Analytical Applications
 
 A hands-on lab (~3 hours) for data engineers at UK retail banks. You play a data engineer at NorthBridge Bank — a mid-size UK retail bank regulated by the FCA and PRA — replacing a legacy reporting system with a modern pipeline on Snowflake that automates three critical regulatory reports: **LCR** (Basel III liquidity), **CAR** (Basel III capital adequacy) and **Large Exposures** (PRA 25% Tier 1 limit).
 
@@ -31,6 +31,15 @@ uk-retail-bank-regulatory-reporting/
 ├── LEGAL
 ├── LICENSE
 ├── uk-retail-bank-regulatory-reporting.md  ← Main guide (sfguides format)
+├── steps/                                  ← Per-step instructions with embedded SQL
+│   ├── step_01_snowsight_ui.md
+│   ├── step_02_workspaces.md
+│   ├── step_03_databases_schemas_roles.md
+│   ├── step_04_file_load.md
+│   ├── step_05_staging.md
+│   ├── step_06_reporting.md
+│   ├── step_07_procedures_tasks.md
+│   └── step_08_cortex_code.md
 └── scripts/
     ├── setup.sql                           ← Database, schemas, warehouse
     ├── teardown.sql                        ← Clean up all lab objects
@@ -49,11 +58,7 @@ All data is synthetic, generated within Snowflake using `GENERATOR()` and `RANDO
 
 ## Running the Lab
 
-**Option A** — Open `uk-retail-bank-regulatory-reporting.md` and follow each step. The guide references each SQL script at the appropriate step.
-
-**Option B** — Preview locally with [claat](https://github.com/googlecodelabs/tools/tree/main/claat): `claat export uk-retail-bank-regulatory-reporting.md && claat serve`, then open `http://localhost:9090`.
-
-**Option C** — Run SQL files in `scripts/` directly in Snowsight, in order (setup → 02 → 07).
+Follow the step guides in `steps/` in order (01 → 08). Each file contains instructions and the full SQL — copy and paste directly into a Snowsight worksheet and run section by section.
 
 ---
 
