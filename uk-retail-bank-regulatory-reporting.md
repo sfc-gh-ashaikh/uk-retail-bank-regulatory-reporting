@@ -61,57 +61,16 @@ RAW (ingest) → STAGING (cleanse) → REPORTING (regulatory views)
 ## Step 1: Getting Familiar with the Snowsight UI
 Duration: 15
 
-### The Snowsight Interface
+Snowsight is Snowflake's browser-based interface. Log in to your Snowflake account and explore the key areas:
 
-Snowsight is Snowflake's browser-based interface. Everything you need to build, run and monitor your pipeline lives here. Let's get oriented before writing any code.
+**Left Navigation Panel** — The sidebar gives you access to **Home** (activity summary), **Data** (browse databases/schemas/tables), **Worksheets** (SQL editor), **Notebooks**, **Monitoring** (Query History, Task History) and **Admin** (warehouses, users, roles).
 
-Log in to your Snowflake account. You will land on the Snowsight home page.
+**Top Bar Context Controls** — Every worksheet shows your current **Role**, **Warehouse** and **Database/Schema**. Changing your role changes what objects are visible — this is Snowflake's role-based access control (RBAC) in action.
 
-### Left Navigation Panel
-
-The left sidebar is your primary navigation. Each icon takes you to a different area:
-
-| Icon / Label | What It Does |
-|---|---|
-| **Home** | Activity summary and recent objects |
-| **Data** | Browse databases, schemas and tables. Load data, view column profiles |
-| **Worksheets** | SQL and Python development environment |
-| **Notebooks** | Interactive notebook-style development |
-| **Monitoring** | Query History, Task History, Copy History, Activity |
-| **Admin** | Warehouses, resource monitors, users, roles |
-
-### Top Bar — Context Controls
-
-The top bar of every worksheet shows your current execution context:
-
-- **Role** — controls what objects you can see and what operations you can perform
-- **Warehouse** — the compute cluster that executes your queries
-- **Database / Schema** — the default namespace for unqualified object references
-
-> **Key Point**: Changing your role changes what is visible in the object browser on the left. A data engineer's role may not see the same databases as a reporting analyst's role. This is Snowflake's role-based access control (RBAC) in action.
-
-### Query History
-
-Click **Monitoring > Query History** in the left nav. This shows every SQL statement executed in your account, with:
-
-- Execution status (Succeeded / Failed / Queued)
-- Duration and bytes scanned
-- The warehouse used
-- The full SQL text (click any row)
-
-This is invaluable for debugging and auditing — especially important in a regulated bank environment where every query may need to be evidenced.
-
-### Data Explorer
-
-Click **Data** in the left nav. Expand your account's databases to browse schemas, tables and views. Click any table to see:
-
-- Column names and data types
-- A **Data Preview** tab showing sample rows
-- A **Column** tab showing min/max/null statistics
-
-### Task History
-
-Click **Monitoring > Task History**. This is where you will monitor your automated pipeline in Step 7. You can see each task run, its duration, dependencies and any error messages.
+**Key areas to explore now:**
+- **Monitoring > Query History** — every SQL statement executed in your account, with status, duration and full SQL text. Invaluable for debugging and regulatory audit trails.
+- **Data** — expand databases to browse schemas, tables and views. Click any table to see column types, data preview and statistics.
+- **Monitoring > Task History** — where you will monitor your automated pipeline in Step 7.
 
 ### Your First Query
 
@@ -138,26 +97,9 @@ Duration: 15
 
 Worksheets are Snowflake's primary code development environment. Used well, they provide a structured workspace for building and testing data pipelines.
 
-### Creating and Naming a Worksheet
+**Create your first worksheet:** Click **Worksheets** in the left nav, click **+** (top right), and rename it to `NORTHBRIDGE_HOL_SETUP`. Good names describe what the code does — not who wrote it or when.
 
-1. Click **Worksheets** in the left nav
-2. Click **+** (top right) to create a new worksheet
-3. Click the worksheet name (defaults to the current date/time) and rename it to:
-   ```
-   NORTHBRIDGE_HOL_SETUP
-   ```
-
-Good worksheet names describe what the code does — not who wrote it or when.
-
-### Organising Worksheets into Folders
-
-As a project grows, a flat list of worksheets becomes hard to navigate. Folders keep related worksheets together.
-
-1. In the Worksheets panel, click the **+** folder icon or right-click in the left panel
-2. Create a new folder called **NorthBridge HOL**
-3. Drag your worksheet into that folder
-
-For this lab, you will create one worksheet per step:
+**Organise with folders:** Click the **+** folder icon, create a folder called **NorthBridge HOL**, and drag your worksheet into it. For this lab, create one worksheet per step:
 
 | Worksheet Name | Step |
 |---|---|
@@ -170,7 +112,7 @@ For this lab, you will create one worksheet per step:
 | `07_TASKS` | Step 7: Task Orchestration |
 | `08_CORTEX_CODE` | Step 8: Cortex Code |
 
-### Running Code Efficiently
+### Keyboard Shortcuts and Tips
 
 | Action | Mac | Windows |
 |---|---|---|
@@ -178,29 +120,14 @@ For this lab, you will create one worksheet per step:
 | Run all statements | `Cmd + Shift + Enter` | `Ctrl + Shift + Enter` |
 | Comment/uncomment selection | `Cmd + /` | `Ctrl + /` |
 | Format SQL | `Cmd + Shift + F` | `Ctrl + Shift + F` |
-| Open keyboard shortcut reference | `?` icon top right | `?` icon top right |
 
-> **Tip**: Highlight a single statement and press `Cmd/Ctrl + Enter` to run only that statement. This is the most important habit to develop — it prevents accidentally running an entire file when you only want to test one query.
+> **Tip**: Highlight a single statement and press `Cmd/Ctrl + Enter` to run only that statement. This prevents accidentally running an entire file.
 
-### The Worksheet Context Bar
+The **context bar** at the top of every worksheet shows your current Role, Warehouse, Database and Schema. Setting this context lets you write `SELECT * FROM CUSTOMERS` instead of fully qualified names. Always verify your context before running a script.
 
-At the top of every worksheet is a context bar showing:
+The **results panel** at the bottom lets you download results as CSV, switch to Chart view, or copy cells/rows.
 
-```
-Role: SYSADMIN  |  Warehouse: NORTHBRIDGE_WH  |  Database: NORTHBRIDGE_BANK_HOL  |  Schema: RAW
-```
-
-Setting this context means you can write `SELECT * FROM CUSTOMERS` instead of the fully qualified `SELECT * FROM NORTHBRIDGE_BANK_HOL.RAW.CUSTOMERS`. For this lab, always verify your context before running a script.
-
-### Results Panel
-
-After running a query, the results panel appears at the bottom of the worksheet. You can:
-
-- **Download** results as CSV (cloud icon)
-- **Switch to Chart view** to quickly visualise query output
-- **Copy** individual cells or entire rows
-
-Create the remaining worksheet folders and worksheets for the lab before proceeding to Step 3.
+Create the remaining worksheets for the lab before proceeding to Step 3.
 
 <!-- ------------------------ -->
 ## Step 3: Understanding Databases, Schemas and Roles
@@ -208,23 +135,9 @@ Duration: 25
 
 In this step you will create the NorthBridge Bank environment and load the synthetic dataset.
 
-### Snowflake Object Hierarchy
+Every object in Snowflake exists within a hierarchy: **Organisation > Account > Database > Schema > Tables/Views/Procedures**. When you write SQL without fully qualifying names, Snowflake uses your current database and schema context.
 
-Every object in Snowflake exists within a hierarchy:
-
-```
-Organisation
-    └── Account (your Snowflake account)
-            └── Database  (e.g. NORTHBRIDGE_BANK_HOL)
-                    └── Schema  (e.g. RAW, STAGING, REPORTING)
-                            └── Tables, Views, Procedures, Stages...
-```
-
-When you write SQL without fully qualifying names, Snowflake uses your current **database** and **schema** context to resolve the reference.
-
-### Why Three Schemas?
-
-NorthBridge Bank uses a three-layer architecture — a standard pattern in regulated data environments:
+NorthBridge Bank uses a **three-layer architecture** — a standard pattern in regulated data environments:
 
 | Schema | Purpose | Who Writes | Who Reads |
 |---|---|---|---|
@@ -234,25 +147,11 @@ NorthBridge Bank uses a three-layer architecture — a standard pattern in regul
 
 This separation means a bug in the reporting layer can never corrupt the raw source data.
 
-### Open your `01_SETUP` worksheet
+### Create the Environment
 
-Copy and run the contents of `scripts/setup.sql`.
+Open your `01_SETUP` worksheet and run `scripts/setup.sql`. This creates the `NORTHBRIDGE_BANK_HOL` database, three schemas (`RAW`, `STAGING`, `REPORTING`), the `NORTHBRIDGE_WH` warehouse (X-Small, auto-suspend 60s), and the `STAGING.AUDIT_LOG` table. Verify in the left **Data** panel that the database and schemas are visible.
 
-This creates:
-- The `NORTHBRIDGE_BANK_HOL` database
-- Three schemas: `RAW`, `STAGING`, `REPORTING`
-- The `NORTHBRIDGE_WH` warehouse (X-Small, auto-suspend after 60 seconds)
-- The `STAGING.AUDIT_LOG` table used by stored procedures later
-
-After running, verify in the left **Data** panel that the database and schemas are visible.
-
-### Role-Based Access in Practice
-
-Click the role selector in the top bar. Toggle between `SYSADMIN` and `PUBLIC`.
-
-> **Observe**: As `PUBLIC`, the database browser may show fewer objects or none at all. This is RBAC — different roles see different objects. In a real bank, the ingest team would use a dedicated `INGEST_ROLE`, analysts would use an `ANALYST_ROLE`, and the compliance team would have read-only access to `REPORTING`.
-
-Switch back to `SYSADMIN` before continuing.
+**Try RBAC:** Toggle between `SYSADMIN` and `PUBLIC` in the role selector. As `PUBLIC`, the database browser may show fewer objects — this is role-based access control in action. Switch back to `SYSADMIN` before continuing.
 
 ### Load the Synthetic Dataset
 
@@ -280,15 +179,7 @@ You should see approximately:
 | LOANS | 3,000 |
 | TRANSACTIONS | 500,000 |
 
-### Explore the Data
-
-Click on **Data > NORTHBRIDGE_BANK_HOL > RAW > CUSTOMERS** in the left panel. Click the **Data Preview** tab to see sample rows.
-
-Notice the UK-specific data:
-- `NI_NUMBER` — UK National Insurance number format (`XX 00 00 00 X`)
-- `POSTCODE` — UK postcode format (e.g. `EC1A 1BB`)
-- `SORT_CODE` — UK bank sort code format (`20-XX-XX`) in the ACCOUNTS table
-- All monetary amounts are in GBP
+**Explore the data:** Click **Data > NORTHBRIDGE_BANK_HOL > RAW > CUSTOMERS** and use the **Data Preview** tab. Notice the UK-specific fields: `NI_NUMBER` (National Insurance format), `POSTCODE` (UK format), `SORT_CODE` (bank sort code) and all amounts in GBP.
 
 <!-- ------------------------ -->
 ## Step 4: Loading Reference Data from a CSV File
@@ -296,24 +187,9 @@ Duration: 20
 
 Not all data can be generated in SQL. Reference data — like regulatory rate tables published by the PRA — arrives as files. This step shows two ways to load a CSV file into Snowflake.
 
-### The Scenario
+The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received `lcr_runoff_rates.csv` and needs to load it into Snowflake. Download `scripts/lcr_runoff_rates.csv` from this repository to your local machine.
 
-The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received the file `lcr_runoff_rates.csv` and needs to load it into Snowflake before the next reporting run.
-
-Download `scripts/lcr_runoff_rates.csv` from this repository to your local machine.
-
-### What Are Run-Off Rates?
-
-Under Basel III, the LCR calculation requires each liability category (e.g. retail deposits, wholesale funding) to be multiplied by a prescribed **run-off rate** — the assumed percentage of funds that would be withdrawn under a 30-day stress scenario.
-
-| Liability Category | Sub-Category | Run-Off Rate |
-|---|---|---|
-| RETAIL_DEPOSIT | STABLE | 5% |
-| RETAIL_DEPOSIT | LESS_STABLE | 10% |
-| WHOLESALE_NON_OPERATIONAL | FINANCIAL_INSTITUTION | 100% |
-| SECURED_FUNDING | HQLA_LEVEL1 | 0% |
-
-Rather than hard-coding these rates in SQL, we store them in a reference table — making it easy to update when the PRA revises the rates.
+Under Basel III, each liability category is multiplied by a prescribed **run-off rate** — the assumed withdrawal percentage under a 30-day stress scenario (e.g. Retail Stable deposits at 5%, Wholesale Financial Institutions at 100%). We store these in a reference table rather than hard-coding them — making updates easy when the PRA revises rates.
 
 ### Path A — Snowsight Load Data Wizard (UI)
 
@@ -357,32 +233,16 @@ ON_ERROR = 'ABORT_STATEMENT';
 > **Note**: To upload the file to the stage via SQL (SnowSQL CLI): `PUT file:///path/to/lcr_runoff_rates.csv @RAW.NORTHBRIDGE_REF_STAGE;`
 > For this lab, use the Snowsight stage UI to upload the file (click the stage object in Data browser > Upload button).
 
-### Verify the Load
+### Verify and Reload
 
 ```sql
-SELECT
-    liability_category,
-    sub_category,
-    run_off_rate_pct,
-    regulatory_basis
-FROM RAW.LCR_RUNOFF_RATES
-ORDER BY liability_category, sub_category;
+SELECT liability_category, sub_category, run_off_rate_pct, regulatory_basis
+FROM RAW.LCR_RUNOFF_RATES ORDER BY liability_category, sub_category;
 
 SELECT COUNT(*) AS rows_loaded FROM RAW.LCR_RUNOFF_RATES;
 ```
 
-You should see 25 rows covering all Basel III standardised run-off categories.
-
-### Reload Pattern
-
-When the PRA publishes revised rates:
-```sql
-TRUNCATE TABLE RAW.LCR_RUNOFF_RATES;
--- Re-upload new version of lcr_runoff_rates.csv to stage
--- Then re-run the COPY INTO statement
-```
-
-This pattern ensures the table always reflects the current regulatory rates without needing to delete individual rows.
+You should see 25 rows. When the PRA publishes revised rates, simply `TRUNCATE TABLE RAW.LCR_RUNOFF_RATES`, re-upload the new CSV to the stage, and re-run `COPY INTO`.
 
 <!-- ------------------------ -->
 ## Step 5: Core Data Engineering — Tables, Views and Staging
@@ -392,32 +252,11 @@ In this step you will build the **STAGING layer**: cleansed, standardised and en
 
 Open your `04_STAGING` worksheet and work through `scripts/04_staging_pipeline.sql`.
 
-### Part A: Creating Staging Tables
+### Parts A & B: Staging Tables and Cleansing Views
 
-Staging tables provide physical snapshots of cleansed data. They are populated by stored procedures (Step 7) and provide a stable, performant foundation for downstream reporting.
+**Run Part A** to create four staging tables. Note the DDL conventions: explicit data types (`NUMBER`, `VARCHAR(n)`), `NOT NULL` constraints, `DEFAULT CURRENT_TIMESTAMP()` for load auditing, and `TIMESTAMP_NTZ` (timezone-naive — used in banking to avoid DST ambiguity).
 
-Run Part A of the script to create the four staging tables. Observe the DDL patterns:
-
-```sql
-CREATE OR REPLACE TABLE STAGING.STG_CUSTOMERS (
-    customer_id         NUMBER          NOT NULL,
-    first_name          VARCHAR(50)     NOT NULL,
-    ...
-    ni_number_masked    VARCHAR(13)     NOT NULL,
-    ...
-    stg_loaded_at       TIMESTAMP_NTZ   DEFAULT CURRENT_TIMESTAMP()
-);
-```
-
-Key DDL conventions used throughout:
-- **Explicit data types**: `NUMBER`, `VARCHAR(n)`, `DATE`, `TIMESTAMP_NTZ`
-- **NOT NULL constraints**: applied to mandatory fields
-- **DEFAULT values**: `CURRENT_TIMESTAMP()` stamps when each row was loaded
-- `TIMESTAMP_NTZ`: timezone-naive timestamps — used in banking to avoid DST ambiguity in audit trails
-
-### Part B: Creating Cleansing Views
-
-Views are virtual tables — they store the query definition but not the data. Every time you query a view, it reads the latest data from the underlying tables.
+**Run Part B** to create cleansing views. Views store a query definition, not data — every access reads the latest from the underlying tables.
 
 **STG_CUSTOMERS_V** — applies two key transformations:
 
@@ -462,36 +301,13 @@ END  AS ltv_ratio_pct
 ```
 Risk-weighted assets and Loan-to-Value ratios are derived at query time from the source data — no duplication of values.
 
-### Tables vs Views — When to Use Each
+For this pipeline: views feed the reporting layer at query time; staging tables are physical snapshots populated daily by the task pipeline.
 
-| | Table | View |
-|---|---|---|
-| **Storage** | Stores data physically | Stores only the query definition |
-| **Performance** | Fast reads (no re-computation) | Re-executes query on every access |
-| **Freshness** | Snapshot at load time | Always current |
-| **Use when** | Downstream consumers need stable, fast reads | Data must always reflect latest source |
+### Part C: Warehouse Scaling
 
-For this pipeline: views feed the reporting layer at query time; staging tables are physical snapshots populated once per day by the task pipeline.
+If a view query is slow, you scale compute — not restructure your pipeline. Snowflake lets you resize a warehouse instantly with `ALTER WAREHOUSE`.
 
-### Part C: Warehouse Scaling — Elastic Compute in Action
-
-Views re-execute their query on every access. If that query is slow, you scale compute — not restructure your pipeline. Snowflake lets you resize a warehouse with a single `ALTER WAREHOUSE` command, and the change takes effect immediately.
-
-**When would a bank do this?** NorthBridge's staging refresh runs daily before the London markets open (06:00 UTC). If the data volume grows and the refresh risks missing the FCA's reporting window, the team would scale up the warehouse temporarily, run the refresh, then scale back down. You only pay for the time the larger warehouse is active.
-
-Run Part C of the script section by section.
-
-**Step 1 — Disable caching**
-
-To get an honest comparison, disable Snowflake's result cache so every run hits the warehouse:
-
-```sql
-ALTER SESSION SET USE_CACHED_RESULT = FALSE;
-```
-
-**Step 2 — Run the benchmark query on X-SMALL**
-
-This query joins 500k staged transactions to the accounts table and aggregates by category — representative of a real staging workload:
+Run Part C section by section: first disable caching (`ALTER SESSION SET USE_CACHED_RESULT = FALSE`), then run the benchmark query on X-SMALL:
 
 ```sql
 SELECT
@@ -510,50 +326,17 @@ ORDER BY total_amount_gbp DESC;
 
 Note the execution time in the **Query History** panel or the results pane.
 
-**Step 3 — Scale up to MEDIUM**
+Then scale up to MEDIUM (`ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'MEDIUM'`), suspend/resume to clear cache, and re-run the same query. Compare execution times — MEDIUM has 4× the compute, with zero changes to your SQL.
 
-```sql
-ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'MEDIUM';
-```
+Scale back down afterwards (`SET WAREHOUSE_SIZE = 'X-SMALL'` and re-enable caching). In production, the task DAG could automate this scale-up/scale-down pattern.
 
-That's it — one command. The warehouse resizes immediately. To ensure the warehouse data cache is cleared (so we are comparing compute power, not cached micro-partitions), suspend and resume:
+> **Key Takeaway**: Snowflake separates storage from compute. Scaling is instant and does not affect your data or other users.
 
-```sql
-ALTER WAREHOUSE NORTHBRIDGE_WH SUSPEND;
-ALTER WAREHOUSE NORTHBRIDGE_WH RESUME;
-```
+### Parts D & E: Validate Views and Zero-Copy Cloning
 
-**Step 4 — Re-run the same query on MEDIUM**
+**Run Part D** to confirm your views return clean, enriched data.
 
-Run the exact same query again. Compare the execution time with your X-SMALL baseline.
-
-> **Observe**: A MEDIUM warehouse has 4× the compute of X-SMALL. You should see a noticeable reduction in execution time — with zero changes to your SQL, schema or pipeline logic.
-
-**Step 5 — Scale back down**
-
-```sql
-ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'X-SMALL';
-ALTER SESSION SET USE_CACHED_RESULT = TRUE;
-```
-
-Scale down immediately after the heavy workload completes. In production, this pattern can be automated — the task DAG in Step 7 could scale up before the refresh and scale back down after.
-
-| Warehouse Size | Clusters | Credits/Hour | Use When |
-|---|---|---|---|
-| X-SMALL | 1 | 1 | Day-to-day development, light queries |
-| SMALL | 1 | 2 | Moderate workloads |
-| MEDIUM | 1 | 4 | Staging refresh, report generation |
-| LARGE | 1 | 8 | Heavy ETL, large data loads |
-
-> **Key Takeaway**: Snowflake separates storage from compute. Scaling compute up or down is instant and does not affect your data, your pipeline logic, or other users. This elasticity is why cloud data platforms are attractive to regulated firms — you right-size compute to your workload window, not to your peak.
-
-### Part D: Validate Your Views
-
-Run Part D of the script to confirm your views return clean, enriched data.
-
-### Part E: Zero-Copy Cloning
-
-Run Part E to clone the transactions table:
+**Run Part E** to clone the transactions table:
 
 ```sql
 CREATE TABLE IF NOT EXISTS RAW.TRANSACTIONS_DEV
@@ -702,11 +485,7 @@ The reporting views built in Step 6 always reflect live data. For regulatory sub
 
 Open your `06_PROCEDURES` worksheet and work through `scripts/06_stored_procedures.sql`.
 
-#### SP_REFRESH_STAGING
-
-This procedure truncates and reloads all staging tables from the RAW layer. It uses **Snowflake Scripting** — a SQL-native procedural language that supports variables, control flow and exception handling.
-
-Key structural elements:
+**SP_REFRESH_STAGING** truncates and reloads all staging tables from RAW using **Snowflake Scripting** — a SQL-native procedural language with variables, control flow and exception handling:
 
 ```sql
 CREATE OR REPLACE PROCEDURE STAGING.SP_REFRESH_STAGING()
@@ -739,17 +518,11 @@ END;
 $$;
 ```
 
-Key language features used:
-- `DECLARE` — variable declarations with default values
-- `SQLROWCOUNT` — built-in variable returning rows affected by the last DML
-- `BEGIN ... EXCEPTION WHEN OTHER THEN ... END` — inner exception blocks that handle errors per table without aborting the whole procedure
-- `SQLERRM` — the error message from the most recent exception
+Key features: `DECLARE` (variables with defaults), `SQLROWCOUNT` (rows affected), `BEGIN ... EXCEPTION WHEN OTHER THEN ... END` (per-table error handling without aborting), and `SQLERRM` (error message).
 
-#### SP_REFRESH_REPORTING
+**SP_REFRESH_REPORTING** creates daily snapshot tables (`SNAP_LCR_COMPONENTS`, `SNAP_CAPITAL_ADEQUACY`, `SNAP_LARGE_EXPOSURES`) with a `snapshot_date` column — preserving a full audit trail of regulatory positions.
 
-This procedure creates daily snapshot tables (`SNAP_LCR_COMPONENTS`, `SNAP_CAPITAL_ADEQUACY`, `SNAP_LARGE_EXPOSURES`) and inserts today's regulatory report data with a `snapshot_date` column. Each day's data is preserved — giving a full audit trail of regulatory positions.
-
-#### Test the Procedures
+**Test both procedures:**
 
 ```sql
 CALL STAGING.SP_REFRESH_STAGING();
@@ -768,11 +541,7 @@ LIMIT 20;
 
 Open your `07_TASKS` worksheet and work through `scripts/07_tasks.sql`.
 
-#### The Task DAG
-
-A **task** is a Snowflake object that executes a SQL statement or stored procedure call, either on a schedule or when a predecessor task completes. A collection of tasks linked by dependencies forms a **DAG** (Directed Acyclic Graph).
-
-NorthBridge Bank's pipeline DAG:
+A **task** executes SQL on a schedule or when a predecessor completes. Tasks linked by dependencies form a **DAG** (Directed Acyclic Graph). NorthBridge Bank's pipeline DAG:
 
 ```
 TASK_INGEST_COMPLETE          ← Root task (scheduled: 06:00 UTC daily)
@@ -798,9 +567,7 @@ AS
 CALL STAGING.SP_REFRESH_STAGING();
 ```
 
-#### Resume Tasks (Leaf to Root)
-
-Tasks are created in `SUSPENDED` state. Always resume leaf tasks before root tasks:
+**Resume tasks leaf-to-root** (tasks are created `SUSPENDED`):
 
 ```sql
 ALTER TASK STAGING.TASK_REFRESH_REPORTING RESUME;
@@ -810,28 +577,15 @@ ALTER TASK STAGING.TASK_INGEST_COMPLETE   RESUME;
 
 > **Why leaf first?** If you resume the root task before the children are active, the root task will complete and try to trigger suspended children — which won't run. Always work bottom-up.
 
-#### Manually Trigger the Pipeline
-
-Rather than waiting for 06:00 UTC, trigger the DAG manually:
+**Manually trigger** rather than waiting for 06:00 UTC:
 
 ```sql
 EXECUTE TASK STAGING.TASK_INGEST_COMPLETE;
 ```
 
-#### Monitor in Snowsight
+**Monitor:** Navigate to **Monitoring > Task History** to see each task's status, duration, DAG graph and error messages. Give it 30–60 seconds, then refresh.
 
-Navigate to **Monitoring > Task History** in the left nav. You will see:
-
-- Each task run with status (`Succeeded` / `Failed` / `Running`)
-- Execution duration for each task
-- The DAG run graph — visualising the dependency chain
-- Error messages for any failed tasks (click the row to expand)
-
-Give it 30–60 seconds, then refresh the Task History page to see all three tasks complete successfully.
-
-#### Suspend Tasks After the Lab
-
-When you are finished, suspend the tasks to avoid unnecessary compute charges:
+**Suspend tasks** when finished to avoid unnecessary compute:
 
 ```sql
 ALTER TASK STAGING.TASK_INGEST_COMPLETE   SUSPEND;
@@ -849,11 +603,7 @@ Open your `08_CORTEX_CODE` worksheet.
 
 > **Data Residency**: Cortex Code runs entirely within your Snowflake account. Your SQL and schema metadata never leave your Snowflake environment.
 
-### Accessing Cortex Code
-
-Click the **Cortex Code** icon (sparkle ✦) in the top-right corner of the worksheet editor. A chat panel opens alongside your worksheet.
-
-Alternatively, type a natural language comment directly in the worksheet — Cortex Code will suggest completions.
+Click the **Cortex Code** icon (✦) in the top-right corner of the worksheet editor, or type a natural language comment directly in the worksheet for inline completions.
 
 ### Exercise 1 — Generate a Query
 
@@ -931,35 +681,9 @@ Duration: 5
 
 Congratulations — you have built a complete FCA/PRA regulatory reporting pipeline on Snowflake for NorthBridge Bank.
 
-### What You Built
+You built a complete three-layer regulatory reporting pipeline: RAW → STAGING (cleansing views) → REPORTING (LCR, CAR, Large Exposures), automated by a Task DAG running daily at 06:00 UTC with full audit logging.
 
-```
-RAW Schema                 STAGING Schema              REPORTING Schema
-──────────────             ──────────────              ────────────────
-CUSTOMERS (10k)  ────────► STG_CUSTOMERS_V  ─────────► V_LARGE_EXPOSURES
-ACCOUNTS  (15k)  ────────► STG_ACCOUNTS_V   ─────────► V_LCR_COMPONENTS
-TRANSACTIONS(500k)───────► STG_TRANSACTIONS_V ────────► V_LCR_COMPONENTS
-LOANS     (3k)   ────────► STG_LOANS_V      ─────────► V_CAPITAL_ADEQUACY
-LCR_RUNOFF_RATES ──────────────────────────────────────► V_LCR_COMPONENTS
-                                ↕
-                          AUDIT_LOG
-                                ↕
-        Task DAG: TASK_INGEST → SP_REFRESH_STAGING → SP_REFRESH_REPORTING
-                  (Scheduled daily at 06:00 UTC)
-```
-
-### What You Learned
-
-- **Snowsight UI**: Query History, Data Explorer, Task History monitoring
-- **Workspaces**: Organising worksheets into folders, running selections, keyboard shortcuts
-- **Databases, Schemas and Roles**: Three-layer architecture, RBAC context switching
-- **Tables and Views**: DDL conventions, cleansing views, when to materialise vs keep as a view
-- **Warehouse Scaling**: Instant resize with ALTER WAREHOUSE, elastic compute for workload windows
-- **File-based ingest**: Internal stages, file formats, COPY INTO — plus the Snowsight Load Data wizard
-- **Zero-Copy Cloning**: Instant environment creation for dev/UAT
-- **Stored Procedures**: Snowflake Scripting with variables, SQLROWCOUNT, exception handling, AUDIT_LOG
-- **Task Orchestration**: DAG creation, CRON scheduling, leaf-to-root resume order, Snowsight monitoring
-- **Cortex Code**: Generate, explain, refactor and extend SQL using AI assistance
+You learned: Snowsight UI navigation, worksheet workspaces, databases/schemas/roles with RBAC, tables vs views, warehouse scaling, file-based ingest (stages + COPY INTO), zero-copy cloning, Snowflake Scripting stored procedures, task orchestration, and Cortex Code for AI-assisted SQL development.
 
 ### Clean Up (Optional)
 
@@ -971,12 +695,6 @@ DROP DATABASE IF EXISTS NORTHBRIDGE_BANK_HOL;
 DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
 ```
 
-### Related Resources
+### Resources
 
-- [Snowflake Scripting Developer Guide](https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index)
-- [Introduction to Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro)
-- [Understanding Stages](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui)
-- [Cloning Considerations](https://docs.snowflake.com/en/user-guide/object-clone)
-- [Cortex Code Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code)
-- [PRA Rulebook — Liquidity (LCR)](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity)
-- [Basel III LCR Framework](https://www.bis.org/publ/bcbs238.htm)
+[Snowflake Scripting](https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index) · [Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro) · [Stages](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui) · [Cloning](https://docs.snowflake.com/en/user-guide/object-clone) · [Cortex Code](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code) · [PRA LCR Rulebook](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity) · [Basel III LCR (BIS)](https://www.bis.org/publ/bcbs238.htm)

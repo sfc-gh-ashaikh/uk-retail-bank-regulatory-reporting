@@ -1,49 +1,14 @@
 # NorthBridge Bank: Building a Regulatory Reporting Pipeline on Snowflake
 
-A hands-on lab for data engineers and analytical application developers at UK retail banks. You play a data engineer at NorthBridge Bank — a mid-size UK retail bank regulated by the FCA and PRA — tasked with replacing a legacy on-premises reporting system with a modern pipeline on Snowflake.
+A hands-on lab (~3 hours) for data engineers at UK retail banks. You play a data engineer at NorthBridge Bank — a mid-size UK retail bank regulated by the FCA and PRA — replacing a legacy reporting system with a modern pipeline on Snowflake that automates three critical regulatory reports: **LCR** (Basel III liquidity), **CAR** (Basel III capital adequacy) and **Large Exposures** (PRA 25% Tier 1 limit).
+
+**Prerequisites**: Snowflake account with `SYSADMIN` access, a web browser, basic SQL familiarity. No prior Snowflake experience required.
 
 ---
 
-## The Story
+## What You Will Learn and Build
 
-NorthBridge Bank's legacy regulatory reporting system is being decommissioned. The Risk & Compliance team needs three critical reports delivered daily before the London market opens: the Liquidity Coverage Ratio (LCR), Capital Adequacy Report (CAR), and Large Exposures Register. Your team has been given six weeks and a Snowflake account. This lab walks through everything you build — from standing up the environment to scheduling the daily pipeline.
-
----
-
-## What Participants Will Learn
-
-| Topic | What You Will Learn |
-|---|---|
-| Snowsight UI | Navigate the interface, use Query History, Task History and Data Explorer |
-| Workspaces | Organise worksheets into folders, run selections, use keyboard shortcuts |
-| Databases, Schemas & Roles | Snowflake object hierarchy, three-layer architecture, RBAC and context switching |
-| File-Based Ingest | Internal stages, file formats, COPY INTO for loading external reference data |
-| Tables & Views | DDL conventions, cleansing views, PII masking techniques, zero-copy cloning |
-| Warehouse Scaling | Instantly resize compute with ALTER WAREHOUSE and understand credit implications |
-| Analytical Views | Build business-facing views using CTEs, aggregations and window functions |
-| Stored Procedures | Snowflake Scripting — variables, SQLROWCOUNT, exception handling, audit logging |
-| Task Orchestration | Create task DAGs, CRON scheduling, dependency ordering, pipeline monitoring |
-| Cortex Code | AI-assisted SQL generation, code explanation and query refactoring |
-
----
-
-## What Participants Will Build
-
-A three-layer data pipeline producing three regulatory reports:
-
-| Report | Regulation | What It Measures |
-|---|---|---|
-| Liquidity Coverage Ratio (LCR) | Basel III / CRD IV | Liquid asset buffer vs 30-day stress outflows |
-| Capital Adequacy Report (CAR) | Basel III Pillar 1 / CRR2 | Tier 1 capital vs risk-weighted assets |
-| Large Exposures Register | PRA Rulebook 4.1 | Single counterparty concentration (25% Tier 1 limit) |
-
----
-
-## Lab Structure
-
-**Duration**: ~3 hours (half-day)  
-**Audience**: Data engineers, analytical application developers  
-**Snowflake Features**: Snowsight UI, worksheets, databases/schemas/roles, tables, views, internal stages, file formats, COPY INTO, zero-copy cloning, Snowflake Scripting stored procedures, tasks, Cortex Code
+A three-layer data pipeline (`RAW → STAGING → REPORTING`) automated by a Task DAG, covering: Snowsight UI navigation, worksheets and workspaces, databases/schemas/roles with RBAC, file-based ingest (stages, file formats, COPY INTO), tables vs views, PII masking, warehouse scaling, zero-copy cloning, Snowflake Scripting stored procedures, task orchestration (CRON + DAG), and Cortex Code for AI-assisted SQL development.
 
 | Step | Topic | Duration |
 |---|---|---|
@@ -62,118 +27,39 @@ A three-layer data pipeline producing three regulatory reports:
 
 ```
 uk-retail-bank-regulatory-reporting/
-├── README.md                              ← This file
+├── README.md
 ├── LEGAL
 ├── LICENSE
-├── uk-retail-bank-regulatory-reporting.md ← Main guide (sfguides format)
+├── uk-retail-bank-regulatory-reporting.md  ← Main guide (sfguides format)
 └── scripts/
-    ├── setup.sql                          ← Database, schemas, warehouse
-    ├── teardown.sql                       ← Clean up all lab objects
-    ├── 02_data_generation.sql             ← Synthetic dataset (~530k rows)
-    ├── 03_file_load.sql                   ← Stage, file format, COPY INTO
-    ├── 04_staging_pipeline.sql            ← Staging tables and cleansing views
-    ├── 05_reporting_layer.sql             ← LCR, CAR, Large Exposures views
-    ├── 06_stored_procedures.sql           ← SP_REFRESH_STAGING, SP_REFRESH_REPORTING
-    ├── 07_tasks.sql                       ← Task DAG and scheduling
-    └── lcr_runoff_rates.csv               ← PRA reference data (25 rows)
+    ├── setup.sql                           ← Database, schemas, warehouse
+    ├── teardown.sql                        ← Clean up all lab objects
+    ├── 02_data_generation.sql              ← Synthetic dataset (~530k rows)
+    ├── 03_file_load.sql                    ← Stage, file format, COPY INTO
+    ├── 04_staging_pipeline.sql             ← Staging tables and cleansing views
+    ├── 05_reporting_layer.sql              ← LCR, CAR, Large Exposures views
+    ├── 06_stored_procedures.sql            ← SP_REFRESH_STAGING, SP_REFRESH_REPORTING
+    ├── 07_tasks.sql                        ← Task DAG and scheduling
+    └── lcr_runoff_rates.csv                ← PRA reference data (25 rows)
 ```
 
----
-
-## Synthetic Dataset
-
-All data is generated entirely within Snowflake using `GENERATOR()` and `RANDOM()`. No external files are needed for the core dataset. The data is entirely fictional.
-
-| Table | Rows | Key UK Fields |
-|---|---|---|
-| `RAW.PRODUCTS` | 20 | LCR categories, Basel III risk weights |
-| `RAW.CUSTOMERS` | 10,000 | NI numbers, UK postcodes, KYC status |
-| `RAW.ACCOUNTS` | 15,000 | Sort codes, account numbers, GBP balances |
-| `RAW.LOANS` | 3,000 | Mortgages, personal loans, auto finance |
-| `RAW.TRANSACTIONS` | 500,000 | 6 months of card, BACS, CHAPS, standing order data |
-
-The CSV file `lcr_runoff_rates.csv` contains 25 rows of PRA/Basel III prescribed run-off rates, used as reference data in the LCR calculation.
-
----
-
-## Prerequisites
-
-- A Snowflake account with `SYSADMIN` role access
-- A web browser (Chrome or Firefox recommended)
-- This repository downloaded locally
-
-No prior Snowflake experience is required. Basic SQL familiarity (SELECT, JOIN, GROUP BY) is assumed.
+All data is synthetic, generated within Snowflake using `GENERATOR()` and `RANDOM()`: Products (20), Customers (10K), Accounts (15K), Loans (3K), Transactions (500K). The CSV contains 25 rows of PRA/Basel III run-off rates for the LCR calculation.
 
 ---
 
 ## Running the Lab
 
-### Option A — Follow the Guide
+**Option A** — Open `uk-retail-bank-regulatory-reporting.md` and follow each step. The guide references each SQL script at the appropriate step.
 
-Open the main guide file and follow each step in sequence:
+**Option B** — Preview locally with [claat](https://github.com/googlecodelabs/tools/tree/main/claat): `claat export uk-retail-bank-regulatory-reporting.md && claat serve`, then open `http://localhost:9090`.
 
-```
-uk-retail-bank-regulatory-reporting.md
-```
-
-The guide references each SQL script file at the appropriate step.
-
-### Option B — Preview Locally with claat
-
-To render the guide as an interactive HTML tutorial (matching the Snowflake Guides website format):
-
-1. Install the [claat tool](https://github.com/googlecodelabs/tools/tree/main/claat):
-   ```bash
-   go install github.com/googlecodelabs/tools/claat@latest
-   ```
-
-2. Export the markdown to HTML:
-   ```bash
-   claat export uk-retail-bank-regulatory-reporting.md
-   ```
-
-3. Serve locally:
-   ```bash
-   claat serve
-   ```
-
-4. Open `http://localhost:9090` in your browser.
-
-### Option C — Run SQL Scripts Directly
-
-Each SQL file in the `scripts/` folder can be run independently in Snowsight. Run them in order (setup → 02 → 07).
-
----
-
-## Data Architecture
-
-```
-Data Ingest
-  ├── SQL GENERATOR (inline) ──────────────────────────────────┐
-  └── lcr_runoff_rates.csv → Internal Stage → COPY INTO ───────┤
-                                                               ↓
-RAW Schema                        STAGING Schema              REPORTING Schema
-──────────────                    ──────────────              ────────────────
-CUSTOMERS (10k)  ── view ──────► STG_CUSTOMERS_V             V_LCR_COMPONENTS
-ACCOUNTS  (15k)  ── view ──────► STG_ACCOUNTS_V    ────────► V_CAPITAL_ADEQUACY
-TRANSACTIONS(500k)─ view ──────► STG_TRANSACTIONS_V          V_LARGE_EXPOSURES
-LOANS     (3k)   ── view ──────► STG_LOANS_V
-LCR_RUNOFF_RATES ──────────────────────────────── joined in ──► V_LCR_COMPONENTS
-
-Orchestration (daily at 06:00 UTC)
-  TASK_INGEST_COMPLETE
-       └── TASK_REFRESH_STAGING   → SP_REFRESH_STAGING()   → AUDIT_LOG
-                └── TASK_REFRESH_REPORTING → SP_REFRESH_REPORTING() → AUDIT_LOG
-                    └── Creates: SNAP_LCR_COMPONENTS
-                                 SNAP_CAPITAL_ADEQUACY
-                                 SNAP_LARGE_EXPOSURES
-```
+**Option C** — Run SQL files in `scripts/` directly in Snowsight, in order (setup → 02 → 07).
 
 ---
 
 ## Clean Up
 
-Run `scripts/teardown.sql` in Snowsight, or execute:
+Run `scripts/teardown.sql` or:
 
 ```sql
 USE ROLE SYSADMIN;
@@ -186,11 +72,6 @@ DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
 
 ---
 
-## Related Resources
+## Resources
 
-- [Snowflake Documentation](https://docs.snowflake.com)
-- [Snowflake Developer Guides](https://www.snowflake.com/en/developers/guides/)
-- [Snowflake Scripting Reference](https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index)
-- [Introduction to Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro)
-- [PRA Rulebook — Liquidity (LCR)](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity)
-- [Basel III LCR Framework (BIS)](https://www.bis.org/publ/bcbs238.htm)
+[Snowflake Docs](https://docs.snowflake.com) · [Snowflake Scripting](https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index) · [Tasks](https://docs.snowflake.com/en/user-guide/tasks-intro) · [Stages](https://docs.snowflake.com/en/user-guide/data-load-local-file-system-stage-ui) · [Cloning](https://docs.snowflake.com/en/user-guide/object-clone) · [Cortex Code](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-code) · [PRA LCR Rulebook](https://www.bankofengland.co.uk/prudential-regulation/rulebook/made-rules/liquidity) · [Basel III LCR (BIS)](https://www.bis.org/publ/bcbs238.htm)
