@@ -236,7 +236,7 @@ This separation means a bug in the reporting layer can never corrupt the raw sou
 
 ### Open your `01_SETUP` worksheet
 
-Copy and run the contents of `assets/01_setup.sql`.
+Copy and run the contents of `scripts/setup.sql`.
 
 This creates:
 - The `NORTHBRIDGE_BANK_HOL` database
@@ -256,7 +256,7 @@ Switch back to `SYSADMIN` before continuing.
 
 ### Load the Synthetic Dataset
 
-Open your `02_DATA_GENERATION` worksheet and run `assets/02_data_generation.sql`.
+Open your `02_DATA_GENERATION` worksheet and run `scripts/02_data_generation.sql`.
 
 > **Note**: The transactions table generates ~500,000 rows. This step takes approximately 60 seconds.
 
@@ -300,7 +300,7 @@ Not all data can be generated in SQL. Reference data — like regulatory rate ta
 
 The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received the file `lcr_runoff_rates.csv` and needs to load it into Snowflake before the next reporting run.
 
-Download `assets/lcr_runoff_rates.csv` from this repository to your local machine.
+Download `scripts/lcr_runoff_rates.csv` from this repository to your local machine.
 
 ### What Are Run-Off Rates?
 
@@ -327,7 +327,7 @@ Rather than hard-coding these rates in SQL, we store them in a reference table �
 
 ### Path B — SQL (Stages + COPY INTO)
 
-Open your `03_FILE_LOAD` worksheet and run `assets/03_file_load.sql` section by section.
+Open your `03_FILE_LOAD` worksheet and run `scripts/03_file_load.sql` section by section.
 
 The key concepts:
 
@@ -390,7 +390,7 @@ Duration: 40
 
 In this step you will build the **STAGING layer**: cleansed, standardised and enriched data that the reporting layer will read from.
 
-Open your `04_STAGING` worksheet and work through `assets/04_staging_pipeline.sql`.
+Open your `04_STAGING` worksheet and work through `scripts/04_staging_pipeline.sql`.
 
 ### Part A: Creating Staging Tables
 
@@ -583,7 +583,7 @@ Duration: 25
 
 In this step you will create the three FCA/PRA regulatory reporting views in the `REPORTING` schema.
 
-Open your `05_REPORTING` worksheet and work through `assets/05_reporting_layer.sql`.
+Open your `05_REPORTING` worksheet and work through `scripts/05_reporting_layer.sql`.
 
 ### Report 1: Liquidity Coverage Ratio (LCR)
 
@@ -700,7 +700,7 @@ The reporting views built in Step 6 always reflect live data. For regulatory sub
 
 ### Part A: Stored Procedures
 
-Open your `06_PROCEDURES` worksheet and work through `assets/06_stored_procedures.sql`.
+Open your `06_PROCEDURES` worksheet and work through `scripts/06_stored_procedures.sql`.
 
 #### SP_REFRESH_STAGING
 
@@ -766,7 +766,7 @@ LIMIT 20;
 
 ### Part B: Task Orchestration
 
-Open your `07_TASKS` worksheet and work through `assets/07_tasks.sql`.
+Open your `07_TASKS` worksheet and work through `scripts/07_tasks.sql`.
 
 #### The Task DAG
 

@@ -58,40 +58,24 @@ A three-layer data pipeline producing three regulatory reports:
 
 ---
 
-## Requirements Coverage
-
-| Requirement | Step |
-|---|---|
-| Getting familiar with the Snowsight UI | Step 1 |
-| How to use workspaces for code development | Step 2 |
-| Understanding & selecting databases, schemas and roles | Step 3 |
-| Core data engineering principles in Snowflake | Steps 4 & 5 |
-| Creating tables and views | Step 5 |
-| Creating stored procedures | Step 7 |
-| How to use tasks for orchestration | Step 7 |
-| Using Cortex Code to accelerate building data pipelines | Step 8 |
-
----
-
 ## Repository Structure
 
 ```
 uk-retail-bank-regulatory-reporting/
-├── README.md                                                    ← This file
-└── site/
-    └── sfguides/
-        └── src/
-            └── uk-retail-bank-regulatory-reporting/
-                ├── uk-retail-bank-regulatory-reporting.md       ← Main guide (sfguides format)
-                └── assets/
-                    ├── 01_setup.sql                             ← Database, schemas, warehouse
-                    ├── 02_data_generation.sql                   ← Synthetic dataset (~530k rows)
-                    ├── lcr_runoff_rates.csv                     ← PRA reference data (25 rows)
-                    ├── 03_file_load.sql                         ← Stage, file format, COPY INTO
-                    ├── 04_staging_pipeline.sql                  ← Staging tables and cleansing views
-                    ├── 05_reporting_layer.sql                   ← LCR, CAR, Large Exposures views
-                    ├── 06_stored_procedures.sql                 ← SP_REFRESH_STAGING, SP_REFRESH_REPORTING
-                    └── 07_tasks.sql                             ← Task DAG and scheduling
+├── README.md                              ← This file
+├── LEGAL
+├── LICENSE
+├── uk-retail-bank-regulatory-reporting.md ← Main guide (sfguides format)
+└── scripts/
+    ├── setup.sql                          ← Database, schemas, warehouse
+    ├── teardown.sql                       ← Clean up all lab objects
+    ├── 02_data_generation.sql             ← Synthetic dataset (~530k rows)
+    ├── 03_file_load.sql                   ← Stage, file format, COPY INTO
+    ├── 04_staging_pipeline.sql            ← Staging tables and cleansing views
+    ├── 05_reporting_layer.sql             ← LCR, CAR, Large Exposures views
+    ├── 06_stored_procedures.sql           ← SP_REFRESH_STAGING, SP_REFRESH_REPORTING
+    ├── 07_tasks.sql                       ← Task DAG and scheduling
+    └── lcr_runoff_rates.csv               ← PRA reference data (25 rows)
 ```
 
 ---
@@ -129,10 +113,10 @@ No prior Snowflake experience is required. Basic SQL familiarity (SELECT, JOIN, 
 Open the main guide file and follow each step in sequence:
 
 ```
-site/sfguides/src/uk-retail-bank-regulatory-reporting/uk-retail-bank-regulatory-reporting.md
+uk-retail-bank-regulatory-reporting.md
 ```
 
-The guide references each SQL asset file at the appropriate step.
+The guide references each SQL script file at the appropriate step.
 
 ### Option B — Preview Locally with claat
 
@@ -145,7 +129,6 @@ To render the guide as an interactive HTML tutorial (matching the Snowflake Guid
 
 2. Export the markdown to HTML:
    ```bash
-   cd site/sfguides/src/uk-retail-bank-regulatory-reporting
    claat export uk-retail-bank-regulatory-reporting.md
    ```
 
@@ -156,9 +139,9 @@ To render the guide as an interactive HTML tutorial (matching the Snowflake Guid
 
 4. Open `http://localhost:9090` in your browser.
 
-### Option C — Run SQL Assets Directly
+### Option C — Run SQL Scripts Directly
 
-Each SQL file in the `assets/` folder can be run independently in Snowsight. Run them in order (01 → 07).
+Each SQL file in the `scripts/` folder can be run independently in Snowsight. Run them in order (setup → 02 → 07).
 
 ---
 
@@ -190,13 +173,13 @@ Orchestration (daily at 06:00 UTC)
 
 ## Clean Up
 
-To remove all lab objects from your Snowflake account after completing the lab:
+Run `scripts/teardown.sql` in Snowsight, or execute:
 
 ```sql
 USE ROLE SYSADMIN;
-ALTER TASK NORTHBRIDGE_BANK_HOL.STAGING.TASK_INGEST_COMPLETE   SUSPEND;
-ALTER TASK NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_STAGING   SUSPEND;
-ALTER TASK NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_REPORTING SUSPEND;
+ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_INGEST_COMPLETE   SUSPEND;
+ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_STAGING   SUSPEND;
+ALTER TASK IF EXISTS NORTHBRIDGE_BANK_HOL.STAGING.TASK_REFRESH_REPORTING SUSPEND;
 DROP DATABASE  IF EXISTS NORTHBRIDGE_BANK_HOL;
 DROP WAREHOUSE IF EXISTS NORTHBRIDGE_WH;
 ```
