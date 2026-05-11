@@ -6,11 +6,10 @@ This step loads the PRA LCR run-off rate reference file (`lcr_runoff_rates.csv`)
 
 Not all data can be generated in SQL. Reference data — like regulatory rate tables published by the PRA — arrives as files. This step shows two ways to load a CSV file into Snowflake.
 
-The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received `lcr_runoff_rates.csv` and needs to load it into Snowflake. Download `scripts/lcr_runoff_rates.csv` from this repository to your local machine.
+The PRA has published updated **LCR run-off rates** for the new regulatory year. Your team has received `lcr_runoff_rates.csv` and needs to load it into Snowflake. [Download lcr_runoff_rates.csv](assets/lcr_runoff_rates.csv) to your local machine.
 
 Under Basel III, each liability category is multiplied by a prescribed **run-off rate** — the assumed withdrawal percentage under a 30-day stress scenario (e.g. Retail Stable deposits at 5%, Wholesale Financial Institutions at 100%). We store these in a reference table rather than hard-coding them — making updates easy when the PRA revises rates.
 
-[Download lcr_runoff_rates.csv](assets/lcr_runoff_rates.csv) to your local machine.
 
 ## Path A: Snowsight Load Data Wizard (UI)
 
