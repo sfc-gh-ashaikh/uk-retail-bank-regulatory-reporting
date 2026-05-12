@@ -309,6 +309,7 @@ SELECT
     CURRENT_TIMESTAMP()                                         AS stg_loaded_at
 FROM RAW.LOANS   l
 JOIN RAW.PRODUCTS p ON l.product_id = p.product_id;
+```
 
 ## Part C: Warehouse Scaling
 
@@ -322,6 +323,7 @@ Scale back down afterwards (`SET WAREHOUSE_SIZE = 'X-SMALL'` and re-enable cachi
 
 > **Key Takeaway**: Snowflake separates storage from compute. Scaling is instant and does not affect your data or other users.
 
+```sql
 -- Disable result cache so every run hits the warehouse
 ALTER SESSION SET USE_CACHED_RESULT = FALSE;
 
@@ -370,11 +372,13 @@ ALTER WAREHOUSE NORTHBRIDGE_WH SET WAREHOUSE_SIZE = 'X-SMALL';
 
 -- Re-enable result cache for the rest of the lab
 ALTER SESSION SET USE_CACHED_RESULT = TRUE;
+```
 
--- =============================================================================
--- PART D: VALIDATE THE VIEWS
--- =============================================================================
+## Part D: Validate Views
 
+Run the following to confirm your views return clean, enriched data:
+
+```sql
 -- Check customer masking is working correctly
 SELECT
     customer_id,
@@ -419,13 +423,13 @@ SELECT
 FROM STAGING.STG_LOANS_V
 GROUP BY loan_type
 ORDER BY total_outstanding_gbp DESC;
+```
 
--- =============================================================================
--- PART E: ZERO-COPY CLONE
--- Create a development copy of the transactions table instantly, with no
--- additional storage cost (until data diverges). Ideal for testing pipeline
--- changes without touching production data.
--- =============================================================================
+## Part E: Zero-Copy Clone
+
+Create a development copy of the transactions table instantly, with no additional storage cost (until data diverges). Ideal for testing pipeline changes without touching production data.
+
+```sql
 CREATE TABLE IF NOT EXISTS RAW.TRANSACTIONS_DEV
     CLONE RAW.TRANSACTIONS;
 
@@ -434,20 +438,6 @@ SELECT
     'RAW.TRANSACTIONS'     AS table_name, COUNT(*) AS row_count FROM RAW.TRANSACTIONS UNION ALL
 SELECT
     'RAW.TRANSACTIONS_DEV' AS table_name, COUNT(*) AS row_count FROM RAW.TRANSACTIONS_DEV;
-
--- Key point: modifying TRANSACTIONS_DEV does NOT affect TRANSACTIONS
--- DELETE FROM RAW.TRANSACTIONS_DEV WHERE status = 'REJECTED';  -- safe to run on dev clone
-```
-
-## Parts D & E: Validate Views and Zero-Copy Cloning
-
-**Run Part D** to confirm your views return clean, enriched data.
-
-**Run Part E** to clone the transactions table:
-
-```sql
-CREATE TABLE IF NOT EXISTS RAW.TRANSACTIONS_DEV
-    CLONE RAW.TRANSACTIONS;
 ```
 
 This completes **instantly** — regardless of the table size — and uses **no additional storage** until data in the clone diverges from the original. Both tables show the same row count. The clone is a fully independent copy — modifications to `TRANSACTIONS_DEV` do not affect `TRANSACTIONS`. This is the recommended pattern for:

@@ -14,9 +14,8 @@ Click the **Cortex Code** icon (✦) in the top-right corner of the worksheet ed
 
 Type the following comment into your worksheet and invoke Cortex Code:
 
-```sql
--- Show the top 10 customers by total loan exposure for the large exposures register,
--- including their risk rating and whether they are in breach of the PRA 25% limit
+```
+Show the top 10 customers by total loan exposure for the large exposures register including their risk rating and whether they are in breach of the PRA 25% limit
 ```
 
 Cortex Code will suggest a SQL query. Review it, then run it. Compare the output with your `V_LARGE_EXPOSURES` view — do the results agree?
@@ -112,10 +111,8 @@ GROUP BY lcr.lcr_ratio_pct, lcr.lcr_status, car.tier1_ratio_pct, car.tier1_statu
 
 Type the following comment and let Cortex Code generate the SQL:
 
-```sql
--- Write a query to identify which LCR run-off rate categories
--- have had no transactions in the last 30 days.
--- This would indicate a potential gap in our run-off rate reference data.
+```
+Write a query to identify which LCR run-off rate categories have had no transactions in the last 30 days. This would indicate a potential gap in our run-off rate reference data.
 ```
 
 This is a real data quality check a data engineer would want to build into the pipeline — Cortex Code can scaffold it in seconds.
